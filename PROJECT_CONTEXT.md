@@ -81,3 +81,12 @@ Si regresas a este proyecto en el futuro, sigue estos pasos:
 ---
 
 **Nota Final**: El proyecto es ahora autónomo, resiliente a errores de usuario (validaciones fuertes) y se explica a sí mismo a través del manual integrado.
+
+---
+
+## 6. Control de Versiones (GitHub)
+El código fuente está respaldado y versionado en el siguiente repositorio:
+*   **URL**: [https://github.com/jsanchezl-byte/sow-generator](https://github.com/jsanchezl-byte/sow-generator)
+*   **Rama Principal**: `main`
+*   **Credenciales**: Configured locally via PAT (Personal Access Token).
+
