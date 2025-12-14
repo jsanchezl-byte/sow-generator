@@ -4,6 +4,10 @@
  */
 
 var ServiceContentExtractor = (function() {
+  
+  // Runtime Index for O(1) File Lookup
+  // Key: "SERVICE_ID" or "SERVICE_ID_TIER" -> Value: FileID
+  var _fileIndex = null;
 
   /**
    * Reads a service template document and returns its text content (body).
@@ -28,44 +32,65 @@ var ServiceContentExtractor = (function() {
   }
 
   /**
+   * Indexes the Servicios Folder ONCE per execution.
+   * Maps "Filename" -> "FileID".
+   */
+  function _buildFileIndex(folderId) {
+      if (_fileIndex) return; // Already indexed
+      
+      console.time("BuildDriveIndex");
+      var index = {};
+      
+      try {
+          var folder = DriveApp.getFolderById(folderId);
+          var files = folder.getFiles();
+          
+          while (files.hasNext()) {
+              var file = files.next();
+              // Store by Name (Normalized Upper) -> ID
+              // Example: "PENETRATION_TEST_GOLD" -> "12345..."
+              // We strip extension for easier matching
+              var name = file.getName().toUpperCase().replace(/\.[^/.]+$/, "");
+              index[name] = file.getId();
+          }
+      } catch (e) {
+          console.warn("Drive Indexing Failed: " + e.message);
+      }
+      
+      _fileIndex = index;
+      console.timeEnd("BuildDriveIndex");
+      console.log("Drive Index Built. Files indexed: " + Object.keys(index).length);
+  }
+
+  /**
    * Retrieves specific service description document based on ID/Tier convention.
-   * Path convention: /Servicios/{SERVICE_ID}_{TIER}.docx (simulated look up)
-   * Real implementation: Look up ID from Catalog or search Drive.
-   * @param {string} serviceId
-   * @param {string} tier
-   * @param {string} servicesFolderId
-   * @returns {string} Text content
+   * Uses O(1) Index Lookup instead of iterative search.
    */
   function getServiceDescription(serviceId, tier, servicesFolderId) {
-     if (!servicesFolderId) {
-         // Fallback or error
-         return "";
+     if (!servicesFolderId) return "";
+     
+     // 1. Ensure Index exists
+     _buildFileIndex(servicesFolderId);
+     
+     // 2. Compute Target Name
+     // Convention: "SERVICEID_TIER" or just "SERVICEID"
+     var targetName = serviceId.toUpperCase();
+     if (tier && tier !== "" && tier !== "Standard") {
+         targetName += "_" + tier.toUpperCase();
      }
      
-     // Name pattern: "PENETRATION_TEST_Gold"
-     var searchName = serviceId + (tier ? "_" + tier : "");
+     // 3. Look up
+     var docId = _fileIndex[targetName];
      
-     // Search in folder
-     // Robust Search: Title contains ServiceID and (if applicable) Tier
-     var query = "title contains '" + serviceId + "'";
-     if (tier && tier !== "Standard" && tier !== "") {
-        query += " and title contains '" + tier + "'";
+     // Fallback: If Tier specific not found, try generic ServiceID
+     if (!docId && tier) {
+         docId = _fileIndex[serviceId.toUpperCase()];
      }
      
-     var folder = DriveApp.getFolderById(servicesFolderId);
-     
-     // Note: "trashed = false" is implied but good practice
-     var files = folder.searchFiles(query);
-     
-     if (files.hasNext()) {
-         var file = files.next();
-         // Ensure we grabbed a Google Doc
-         if (file.getMimeType() === MimeType.GOOGLE_DOCS) {
-            return extractTextFromGoogleDoc(file.getId());
-         }
+     if (docId) {
+         return extractTextFromGoogleDoc(docId);
      }
      
-     // If not found, return generic message or empty
      return "Descripción no encontrada para " + serviceId;
   }
 

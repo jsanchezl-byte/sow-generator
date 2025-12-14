@@ -6,11 +6,11 @@
 var ServiceCatalogManager = (function() {
   
   // Cache keys
-  var CACHE_KEY_SERVICES = "SOW_GEN_SERVICES_V2"; // V2 to bust old cache
+  var CACHE_KEY_SERVICES = "SOW_GEN_SERVICES_V3"; 
   var CACHE_TTL = 21600; // 6 hours
 
-  // Memoization variables (Alive only during script execution)
-  var _pricingRowsCache = null;
+  // Runtime Indexes (Memoization for O(1) access)
+  var _pricingIndex = null; // Map: "ServiceID|Tier|Param" -> PriceRule
 
   /**
    * Gets all active services from the catalog.
@@ -78,59 +78,70 @@ var ServiceCatalogManager = (function() {
   }
 
   /**
-   * Ensures pricing rows are loaded in memory for this execution.
+   * Builds the O(1) Pricing Index from the sheet.
+   * Only runs ONCE per execution.
    */
-  function _ensurePricingLoaded() {
-      if (_pricingRowsCache) return; // Already loaded
-      
-      console.log("ServiceCatalogManager: Loading Pricing Table into Memory...");
+  function _buildPricingIndex() {
+      if (_pricingIndex) return; // Already indexed
+
+      console.time("BuildPricingIndex");
       var ss = SpreadsheetApp.openById(CONFIG.SHEET_SERVICES_ID);
       var sheet = ss.getSheetByName(CONFIG.sheets.PRICING);
       if (!sheet) throw new Error("Pricing sheet not found");
-      
+
       var rows = sheet.getDataRange().getValues();
-      rows.shift(); // headers
-      _pricingRowsCache = rows;
+      rows.shift(); // Remove buffer/header
+
+      // Build Hash Map
+      // Key format: "SERVICE_ID|TIER|PARAM_NAME" (Normalized)
+      // "SERVICE_ID||PARAM_NAME" for universal rules
+      var index = {};
+
+      for (var i = 0; i < rows.length; i++) {
+          var r = rows[i];
+          var svcId = String(r[0]).trim();
+          var tier = String(r[1]).trim();
+          var param = String(r[2]).trim().toLowerCase();
+          
+          // Index Key
+          var key = svcId + "|" + tier + "|" + param;
+          
+          index[key] = {
+              unitPrice: Number(r[6]) || 0,
+              currency: r[7] || "MXN"
+          };
+      }
+      
+      _pricingIndex = index;
+      console.timeEnd("BuildPricingIndex");
+      console.log("Pricing Index Built. size=" + Object.keys(index).length);
   }
   
   /**
-   * Calculates the price for a specific service configuration.
-   * Optimized to read sheet only ONCE per execution via _ensurePricingLoaded.
+   * Calculates price using O(1) Lookups.
    */
   function getPrice(serviceId, tier, userParams) {
-     _ensurePricingLoaded(); // Efficient check
-     
-     var rows = _pricingRowsCache;
-     var basePrice = 0;
-     var currency = "MXN"; // default
-     
-     // 1. Filter rows for this service/tier
-     var relevantRows = rows.filter(function(r) {
-        // Col A=ID, B=Tier. If Tier matches OR rule applies to all tiers (empty)
-        return String(r[0]) === String(serviceId) && (String(r[1]) === String(tier) || r[1] === "");
-     });
-     
-     if (relevantRows.length === 0) {
-         return { unitPrice: 0, subtotal: 0, currency: currency, error: "No pricing logic found" };
-     }
+     _buildPricingIndex(); // Lazy Load Index
      
      var total = 0;
+     var currency = "MXN";
      
-     // 2. Iterate params provided by user
-     // userParams = { "objectives": 10 }
+     // Iterate provided params and lookup
      for (var paramName in userParams) {
         var quantity = parseFloat(userParams[paramName]);
         if (isNaN(quantity)) continue;
 
-        // Find price rule for this param (Col C = Param Name)
-        var priceRule = relevantRows.find(function(r) { 
-             return String(r[2]).toLowerCase() === String(paramName).toLowerCase(); 
-        });
+        var pName = String(paramName).trim().toLowerCase();
         
-        // Col G = Unit Price
-        if (priceRule) {
-            total += (Number(priceRule[6]) * quantity);
-            currency = priceRule[7] || "MXN";
+        // Strategy: 1. Specific Tier Match -> 2. Universal Match (Empty Tier)
+        var keySpecific = serviceId + "|" + tier + "|" + pName;
+        var keyUniversal = serviceId + "|" + "" + "|" + pName;
+        
+        var rule = _pricingIndex[keySpecific] || _pricingIndex[keyUniversal];
+
+        if (rule) {
+            total += (rule.unitPrice * quantity);
+            currency = rule.currency; // Last valid currency wins (assuming single currency per SOW)
         }
      }
      
