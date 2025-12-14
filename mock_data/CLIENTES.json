@@ -1,0 +1,11 @@
+[
+    {
+        "Client_Name": "Acme Corp",
+        "Client_Email": "contact@acmecorp.com",
+        "Client_Phone": "+525512345678",
+        "Contact_Person": "Juan Perez",
+        "Industry": "Technology",
+        "Last_SOW_Date": "2024-11-01",
+        "Folder_ID": "FOLDER_ID_ACME"
+    }
+]

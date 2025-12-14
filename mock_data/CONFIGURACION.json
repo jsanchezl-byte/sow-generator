@@ -1,0 +1,22 @@
+[
+    {
+        "Key": "SOW_MASTER_TEMPLATE_ID",
+        "Value": "MASTER_DOC_ID_123",
+        "Description": "ID del documento maestro del SOW"
+    },
+    {
+        "Key": "SERVICIOS_FOLDER_ID",
+        "Value": "FOLDER_SERVICES_123",
+        "Description": "Carpeta con documentos de servicios"
+    },
+    {
+        "Key": "CLIENTES_FOLDER_ID",
+        "Value": "FOLDER_CLIENTS_ROOT",
+        "Description": "Carpeta raíz de clientes"
+    },
+    {
+        "Key": "AUDIT_SHEET_ID",
+        "Value": "SHEET_AUDIT_LOG_ID",
+        "Description": "Hoja de auditoría"
+    }
+]

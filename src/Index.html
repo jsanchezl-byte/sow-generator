@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #673AB7;
+      /* Deep Purple */
+      --secondary: #9575CD;
+      /* Soft Purple */
+      --light: #EDE7F6;
+      /* Lavanda Light */
+      --white: #ffffff;
+      --text: #333333;
+      --success: #4CAF50;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #F8F9FA;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background: var(--white);
+      width: 100%;
+      max-width: 500px;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: var(--primary);
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 24px;
+    }
+
+    .step {
+      display: none;
+      animation: fadeIn 0.4s ease-in-out;
+    }
+
+    .step.active {
+      display: block;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      box-sizing: border-box;
+      font-size: 16px;
+      transition: border 0.3s;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--secondary);
+      outline: none;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.1s;
+    }
+
+    .btn:hover {
+      background: var(--secondary);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      background: #e0e0e0;
+      color: #555;
+      margin-top: 10px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      background: var(--light);
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .checkbox-item input {
+      width: auto;
+      margin: 0 10px 0 0;
+      cursor: pointer;
+    }
+
+    /* Services List Styles */
+    .service-row {
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .loader {
+      display: none;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .success-message {
+      text-align: center;
+      color: var(--success);
+      display: none;
+    }
+
+    .btn-add {
+      background: var(--secondary);
+      width: auto;
+      padding: 8px 16px;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>🚀 SOW Generator</h1>
+
+    <!-- STEP 1: Client Info -->
+    <div id="step1" class="step active">
+      <label>Nombre del Cliente</label>
+      <input type="text" id="clientName" placeholder="Ej: Acme Corp">
+
+      <label>Email de Contacto</label>
+      <input type="email" id="clientEmail" placeholder="contacto@acme.com">
+
+      <label>Fecha de Inicio del Proyecto</label>
+      <input type="date" id="startDate">
+
+      <button class="btn" onclick="goToStep2()">Siguiente ➜</button>
+    </div>
+
+    <!-- STEP 2: Services -->
+    <div id="step2" class="step">
+      <h3>Selección de Servicios</h3>
+      <p style="font-size: 0.9em; color: #666; margin-top: -10px;">Agrega los servicios que necesitas.</p>
+
+      <div id="services-container">
+        <!-- Dynamic Services will appear here -->
+      </div>
+
+      <button class="btn btn-add" onclick="addServiceRow()">+ Agregar Servicio</button>
+
+      <button class="btn" onclick="submitForm()">Generar SOW ✨</button>
+      <button class="btn btn-secondary" onclick="showStep(1)">⬅ Atrás</button>
+    </div>
+
+    <!-- LOADING -->
+    <div id="loading" class="loader">
+      <div class="spinner"></div>
+      <p>Generando documento, por favor espera...</p>
+    </div>
+
+    <!-- SUCCESS -->
+    <div id="success" class="success-message">
+      <h2 style="color: var(--success)">¡Listo!</h2>
+      <p>El SOW ha sido generado exitosamente.</p>
+      <a id="docLink" href="#" target="_blank" class="btn">Abrir Documento 📄</a>
+      <br><br>
+      <button class="btn btn-secondary" onclick="resetForm()">Crear otro</button>
+    </div>
+  </div>
+
+  <script>
+    // Load Catalog on Init
+    var serviceCatalog = [];
+
+    window.onload = function () {
+      google.script.run.withSuccessHandler(function (catalog) {
+        serviceCatalog = catalog;
+        addServiceRow(); // Add first empty row
+      }).getServiceCatalogForWeb();
+    };
+
+    function showStep(n) {
+      document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+      document.getElementById('step' + n).classList.add('active');
+    }
+
+    function goToStep2() {
+      const name = document.getElementById('clientName').value;
+      const email = document.getElementById('clientEmail').value;
+      const date = document.getElementById('startDate').value;
+
+      if (!name || !email || !date) {
+        alert("Por favor completa todos los campos del cliente.");
+        return;
+      }
+      showStep(2);
+    }
+
+    function addServiceRow() {
+      const container = document.getElementById('services-container');
+      const div = document.createElement('div');
+      div.className = 'service-row';
+
+      let optionsHtml = '<option value="">-- Selecciona un Servicio --</option>';
+      serviceCatalog.forEach(svc => {
+        optionsHtml += `<option value="${svc.id}">${svc.name || svc.id}</option>`;
+      });
+
+      div.innerHTML = `
+          <div style="display:flex; justify-content:space-between;">
+             <label style="flex:1;">Servicio</label>
+             <span style="color: red; cursor: pointer; font-size: 0.9em;" onclick="this.parentElement.parentElement.remove()">Eliminar</span>
+          </div>
+          <select class="service-select" onchange="onServiceChange(this)">${optionsHtml}</select>
+          
+          <label>Nivel (Tier)</label>
+          <select class="tier-select" disabled>
+            <option value="">Selecciona servicio primero</option>
+          </select>
+          
+          <!-- Contenedor para parámetros dinámicos (Ej: Objetivos) -->
+          <div class="dynamic-params" style="margin-top: 15px; display: none;">
+             <!-- Objetivos (PenTest) -->
+             <div class="group-objectives" style="display:none; margin-bottom:10px;">
+                 <label>Cantidad de Objetivos (Mínimo 5):</label>
+                 <input type="number" class="param-objectives" min="5" value="5" placeholder="Mínimo 5" style="width: 100px;">
+             </div>
+             
+             <!-- Tickets (SOC) -->
+             <div class="group-tickets" style="display:none; margin-bottom:10px;">
+                 <label>Cantidad de Tickets (Mínimo 50):</label>
+                 <input type="number" class="param-tickets" min="50" value="50" placeholder="Mínimo 50" style="width: 100px;">
+             </div>
+          </div>
+        `;
+      container.appendChild(div);
+    }
+
+    function onServiceChange(selectElement) {
+      console.log("Servicio seleccionado:", selectElement.value);
+      updateTiers(selectElement);
+      updateParams(selectElement);
+    }
+
+    function updateParams(selectElement) {
+      const serviceId = selectElement.value.trim();
+      const row = selectElement.closest('.service-row');
+      const paramsContainer = row.querySelector('.dynamic-params');
+
+      const groupObjectives = row.querySelector('.group-objectives');
+      const groupTickets = row.querySelector('.group-tickets');
+
+      // Reset all
+      paramsContainer.style.display = 'none';
+      groupObjectives.style.display = 'none';
+      groupTickets.style.display = 'none';
+
+      console.log("Evaluando params para ID:", serviceId); // Debug
+
+      if (serviceId === 'PenetrationTest') {
+        paramsContainer.style.display = 'block';
+        groupObjectives.style.display = 'block';
+      } else if (serviceId === 'SOC') {
+        paramsContainer.style.display = 'block';
+        groupTickets.style.display = 'block';
+      }
+    }
+
+    function updateTiers(selectElement) {
+      const serviceId = selectElement.value;
+      const row = selectElement.closest('.service-row');
+      const tierSelect = row.querySelector('.tier-select');
+
+      tierSelect.innerHTML = '<option value="">-- Cargando --</option>';
+      if (!serviceId) {
+        tierSelect.innerHTML = '<option value="">Selecciona servicio primero</option>';
+        tierSelect.disabled = true;
+        return;
+      }
+
+      const service = serviceCatalog.find(s => s.id === serviceId);
+      if (service && service.tiers && service.tiers.length > 0) {
+        let html = '<option value="">-- Selecciona Nivel --</option>';
+        service.tiers.forEach(t => html += `<option value="${t.trim()}">${t.trim()}</option>`);
+        tierSelect.innerHTML = html;
+        tierSelect.disabled = false;
+      } else {
+        tierSelect.innerHTML = '<option value="Standard">Standard</option>';
+        tierSelect.disabled = false;
+      }
+    }
+
+    function submitForm() {
+      // Collect Data
+      const clientData = {
+        clientName: document.getElementById('clientName').value,
+        clientEmail: document.getElementById('clientEmail').value,
+        startDate: document.getElementById('startDate').value
+      };
+
+      const serviceRows = document.querySelectorAll('.service-row');
+      const selectedServices = [];
+      let validationError = null;
+
+      serviceRows.forEach(row => {
+        const svcId = row.querySelector('.service-select').value;
+        const tier = row.querySelector('.tier-select').value;
+
+        if (svcId) {
+          let params = {};
+
+          // Capturar Objetivos si es PenTest
+          if (svcId === 'PenetrationTest') {
+            const objInput = row.querySelector('.param-objectives');
+            const val = parseInt(objInput.value);
+            if (isNaN(val) || val < 5) {
+              validationError = "El servicio Penetration Test requiere un mínimo de 5 objetivos.";
+            }
+            params.objectives = val;
+          }
+
+          // Capturar Tickets si es SOC
+          if (svcId === 'SOC') {
+            const ticketInput = row.querySelector('.param-tickets');
+            const val = parseInt(ticketInput.value);
+            if (isNaN(val) || val < 50) {
+              validationError = "El servicio SOC requiere un mínimo de 50 tickets.";
+            }
+            params.tickets = val;
+          }
+
+          selectedServices.push({ id: svcId, tier: tier, parameters: params });
+        }
+      });
+
+      if (validationError) {
+        alert(validationError);
+        return;
+      }
+
+      if (selectedServices.length === 0) {
+        alert("Selecciona al menos un servicio.");
+        return;
+      }
+
+      // Show Loading
+      document.getElementById('step2').classList.remove('active');
+      document.getElementById('loading').style.display = 'block';
+
+      google.script.run
+        .withSuccessHandler(onSuccess)
+        .withFailureHandler(onFailure)
+        .processWebRequest(clientData, selectedServices);
+    }
+
+    function onSuccess(result) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('success').style.display = 'block';
+      document.getElementById('docLink').href = result.url;
+    }
+
+    function onFailure(error) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('step2').classList.add('active');
+      alert("Error: " + error.message);
+    }
+
+    function resetForm() {
+      // 1. Clear Client Data
+      document.getElementById('clientName').value = "";
+      document.getElementById('clientEmail').value = "";
+      document.getElementById('startDate').value = "";
+
+      // 2. Clear Services
+      document.getElementById('services-container').innerHTML = "";
+      addServiceRow(); // Add one clean row
+
+      // 3. Toggle Views
+      document.getElementById('success').style.display = 'none';
+      document.getElementById('loading').style.display = 'none';
+
+      // 4. Return to Step 1
+      showStep(1);
+    }
+  </script>
+</body>
+
+</html>
+```

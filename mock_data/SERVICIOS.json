@@ -1,0 +1,28 @@
+[
+  {
+    "Service_ID": "PENETRATION_TEST",
+    "Service_Name": "Penetration Testing",
+    "Service_Category": "Security Testing",
+    "Has_Tiers": true,
+    "Tier_Names": "Silver,Gold,Platinum",
+    "Configurable_Parameters": "{\"objectives\":{\"min\":5,\"max\":100},\"scope\":[\"national\",\"regional\",\"global\"]}",
+    "Optional_Addons": "{\"executive_report\":true,\"training\":true}",
+    "Google_Docs_Template_ID": "1a2b3c4d_MOCK_ID",
+    "Duration_days": "30",
+    "Description": "Evaluación integral de vulnerabilidades...",
+    "Active": true
+  },
+  {
+    "Service_ID": "SECURITY_AUDIT",
+    "Service_Name": "Auditoría de Seguridad",
+    "Service_Category": "Compliance",
+    "Has_Tiers": false,
+    "Tier_Names": "",
+    "Configurable_Parameters": "{\"locations\":{\"min\":1,\"max\":50},\"depth\":[\"Basic\",\"Advanced\"]}",
+    "Optional_Addons": "{}",
+    "Google_Docs_Template_ID": "5e6f7g8h_MOCK_ID",
+    "Duration_days": "15",
+    "Description": "Auditoría física y lógica...",
+    "Active": true
+  }
+]

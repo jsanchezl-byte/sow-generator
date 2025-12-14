@@ -1,0 +1,35 @@
+[
+    {
+        "Service_ID": "PENETRATION_TEST",
+        "Tier": "Silver",
+        "Parameter_Name": "objectives",
+        "Value": 5,
+        "Unit": "count",
+        "Description": "Objetivos a evaluar",
+        "Unit_Price": 5000.00,
+        "Currency": "MXN",
+        "Active": true
+    },
+    {
+        "Service_ID": "PENETRATION_TEST",
+        "Tier": "Gold",
+        "Parameter_Name": "objectives",
+        "Value": 15,
+        "Unit": "count",
+        "Description": "Objetivos a evaluar",
+        "Unit_Price": 4500.00,
+        "Currency": "MXN",
+        "Active": true
+    },
+    {
+        "Service_ID": "SECURITY_AUDIT",
+        "Tier": "",
+        "Parameter_Name": "locations",
+        "Value": 1,
+        "Unit": "count",
+        "Description": "Sitios a auditar",
+        "Unit_Price": 10000.00,
+        "Currency": "MXN",
+        "Active": true
+    }
+]
