@@ -14,16 +14,10 @@
 // WEB APP LOGIC MOVED TO WebApp.gs
 
 
-// GOOGLE CHAT ENTRY POINTS
 // ==========================================
-// These must be in the global scope of the default file (Main.gs) or explicitly exposed
-function onMessage(event) {
-  return ChatBotManager.processMessage(event);
-}
+// GOOGLE CHAT ENTRY POINTS REMOVED
+// ==========================================
 
-function onAddToSpace(event) {
-  return ChatBotManager.processAddToSpace(event);
-}
 
 // ==========================================
 // FORM AUTOMATION
@@ -106,36 +100,8 @@ function onFormSubmit(e) {
   }
 }
 
-/**
- * Webhook handler for Chatbot (HTTP POST).
- * @param {Object} e 
- */
-function doPost(e) {
-   try {
-      var payload = JSON.parse(e.postData.contents);
-      
-      // Expected payload: { clientData: {...}, services: [...], userEmail: "..." }
-      
-      var result = _processRequest(payload.clientData, payload.services, payload.userEmail);
-      
-      return ContentService.createTextOutput(JSON.stringify({
-          status: "SUCCESS",
-          data: result
-      })).setMimeType(ContentService.MimeType.JSON);
-      
-   } catch (error) {
-      AuditLogger.logError({
-         user: "chatbot_user",
-         errorType: "WEBHOOK_ERROR",
-         message: error.message,
-         stack: error.stack
-      });
-      return ContentService.createTextOutput(JSON.stringify({
-          status: "ERROR",
-          message: error.message
-      })).setMimeType(ContentService.MimeType.JSON);
-   }
-}
+// Webhook handler for Chatbot (HTTP POST) - REMOVED
+
 
 /**
  * Core processing orchestration.

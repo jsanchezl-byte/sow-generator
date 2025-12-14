@@ -41,7 +41,6 @@ This guide explains how to deploy the Statement of Work (SOW) Generator to your 
 
 ## 6. Triggers
 1. **Forms**: If using Google Forms, link the Form to a Sheet, then add an "On Form Submit" installable trigger in the Apps Script project pointing to `onFormSubmit`.
-2. **Chatbot**: Deploy the script as a Web App to get a URL, and configure your Chatbot to POST to that URL (`doPost`).
 
 ## 7. Testing
 1. Fill out your form or send a test payload.
