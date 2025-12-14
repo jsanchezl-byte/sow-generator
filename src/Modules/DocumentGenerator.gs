@@ -154,6 +154,15 @@ var DocumentGenerator = (function() {
       // Add 'Today'
       body.replaceText("{{FECHA_HOY}}", new Date().toLocaleDateString());
 
+      // Handle Optional 'CONTACTO_PRINCIPAL'
+      if (data.contactName && data.contactName.trim() !== "") {
+          body.replaceText("{{CONTACTO_PRINCIPAL}}", data.contactName);
+      } else {
+         // If empty, we remove the placeholder.
+         // Ideally, user template should handle the label, but we just clear the variable here.
+         body.replaceText("{{CONTACTO_PRINCIPAL}}", "");
+      }
+
       // Handle Optional 'Quote' {{QUOTE}}
       // If present, prefix with Q-. If empty, clear placeholder.
       if (data.quoteNumber && data.quoteNumber.toString().trim() !== "") {

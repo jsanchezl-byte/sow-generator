@@ -6,62 +6,57 @@
 var ServiceCatalogManager = (function() {
   
   // Cache keys
-  var CACHE_KEY_SERVICES = "SOW_GEN_SERVICES_V3"; 
+  var CACHE_KEY_SERVICES = "SOW_GEN_SERVICES_V4_AUTODISCOVERY"; 
   var CACHE_TTL = 21600; // 6 hours
 
-  // Runtime Indexes (Memoization for O(1) access)
-  var _pricingIndex = null; // Map: "ServiceID|Tier|Param" -> PriceRule
+  // Runtime Indexes
+  var _pricingIndex = null; 
 
   /**
    * Gets all active services from the catalog.
-   * Uses CacheService to strictly minimize Sheet reads.
-   * @returns {Array<Object>} List of service objects
    */
   function getAllActiveServices(forceRefresh) {
     var cache = CacheService.getScriptCache();
     var cached = cache.get(CACHE_KEY_SERVICES);
     
-    // Only use cache if not forcing refresh
     if (cached && !forceRefresh) {
       console.log("ServiceCatalogManager: Using Cached Data.");
       return JSON.parse(cached);
     }
     
-    console.log("ServiceCatalogManager: Cache miss or refresh. Fetching from Sheet...");
-    var data = _fetchServicesFromSheet();
+    console.log("ServiceCatalogManager: Cache miss. Fetching & Enriching...");
+    
+    // 1. Fetch Basic Catalog
+    var services = _fetchServicesFromSheet();
+    
+    // 2. Auto-Discover Params from Pricing
+    _buildPricingIndex(); // Ensure index exists
+    _enrichServicesWithPricingParams(services);
     
     try {
-        cache.put(CACHE_KEY_SERVICES, JSON.stringify(data), CACHE_TTL);
+        cache.put(CACHE_KEY_SERVICES, JSON.stringify(services), CACHE_TTL);
     } catch(e) {
-        console.warn("Cache limit exceeded, skipping cache put.");
+        console.warn("Cache limit exceeded.");
     }
-    return data;
+    return services;
   }
 
-  /**
-   * Internal helper to read from Sheets.
-   */
   function _fetchServicesFromSheet() {
     var ss = SpreadsheetApp.openById(CONFIG.SHEET_SERVICES_ID);
-    if (!ss) throw new Error("Could not open spreadsheet with ID: " + CONFIG.SHEET_SERVICES_ID);
-
     var sheet = ss.getSheetByName(CONFIG.sheets.CATALOG);
-    if (!sheet) throw new Error("Sheet '" + CONFIG.sheets.CATALOG + "' not found.");
-    
     var rows = sheet.getDataRange().getValues();
-    rows.shift(); // Remove buffer header
+    rows.shift(); 
     
     var services = [];
     rows.forEach(function(row) {
-      // Column K = Active (Index 10)
       if (row[10] === true) { 
          services.push({
-           id: row[0],
+           id: String(row[0]).trim(),
            name: row[1],
            category: row[2],
            hasTiers: row[3],
            tiers: row[4] ? row[4].toString().split(",") : [],
-           configParams: row[5] ? _safeJsonParse(row[5]) : {},
+           configParams: row[5] ? _safeJsonParse(row[5]) : {}, 
            optionalAddons: row[6] ? _safeJsonParse(row[6]) : {},
            templateId: row[7],
            duration: row[8],
@@ -69,7 +64,6 @@ var ServiceCatalogManager = (function() {
          });
       }
     });
-    
     return services;
   }
   
@@ -77,63 +71,84 @@ var ServiceCatalogManager = (function() {
       try { return JSON.parse(jsonString); } catch(e) { return {}; }
   }
 
-  /**
-   * Builds the O(1) Pricing Index from the sheet.
-   * Only runs ONCE per execution.
-   */
   function _buildPricingIndex() {
-      if (_pricingIndex) return; // Already indexed
-
+      if (_pricingIndex) return; 
       console.time("BuildPricingIndex");
       var ss = SpreadsheetApp.openById(CONFIG.SHEET_SERVICES_ID);
       var sheet = ss.getSheetByName(CONFIG.sheets.PRICING);
       if (!sheet) throw new Error("Pricing sheet not found");
 
       var rows = sheet.getDataRange().getValues();
-      rows.shift(); // Remove buffer/header
+      rows.shift(); 
 
-      // Build Hash Map
-      // Key format: "SERVICE_ID|TIER|PARAM_NAME" (Normalized)
-      // "SERVICE_ID||PARAM_NAME" for universal rules
       var index = {};
-
       for (var i = 0; i < rows.length; i++) {
           var r = rows[i];
           var svcId = String(r[0]).trim();
           var tier = String(r[1]).trim();
-          var param = String(r[2]).trim().toLowerCase();
+          var param = String(r[2]).trim(); // Keep original case for display if needed, normalize for key
           
-          // Index Key
-          var key = svcId + "|" + tier + "|" + param;
+          if(!svcId || !param) continue;
+
+          var key = svcId + "|" + tier + "|" + param.toLowerCase();
           
           index[key] = {
               unitPrice: Number(r[6]) || 0,
-              currency: r[7] || "MXN"
+              currency: r[7] || "MXN",
+              active: true 
           };
       }
-      
       _pricingIndex = index;
       console.timeEnd("BuildPricingIndex");
-      console.log("Pricing Index Built. size=" + Object.keys(index).length);
   }
   
   /**
-   * Calculates price using O(1) Lookups.
+   * cross-references Pricing Sheet to find parameters that might be missing in Catalog JSON.
    */
+  function _enrichServicesWithPricingParams(services) {
+      if(!_pricingIndex) return;
+      
+      // Iterate all keys in pricing index to gather params per service
+      // Key format: "SERVICE_ID|TIER|param_name"
+      var discoveredParams = {}; // Map<ServiceID, Set<ParamName>>
+      
+      Object.keys(_pricingIndex).forEach(function(key) {
+          var parts = key.split("|");
+          if(parts.length < 3) return;
+          
+          var sId = parts[0];
+          var pName = parts[2];
+          
+          if(!discoveredParams[sId]) discoveredParams[sId] = {};
+          discoveredParams[sId][pName] = true; // Use object as Set
+      });
+      
+      // Merge into Services
+      services.forEach(function(svc) {
+          var found = discoveredParams[svc.id];
+          if(found) {
+              // Iterate found params
+              for(var p in found) {
+                  // If not already in configParams, add it (default type 'number')
+                  if(!svc.configParams.hasOwnProperty(p)) {
+                      svc.configParams[p] = "number"; // Auto-discovered
+                      console.log("Auto-Discovered param '" + p + "' for service '" + svc.id + "'");
+                  }
+              }
+          }
+      });
+  }
+
   function getPrice(serviceId, tier, userParams) {
-     _buildPricingIndex(); // Lazy Load Index
-     
+     _buildPricingIndex(); 
      var total = 0;
      var currency = "MXN";
      
-     // Iterate provided params and lookup
      for (var paramName in userParams) {
         var quantity = parseFloat(userParams[paramName]);
         if (isNaN(quantity)) continue;
 
         var pName = String(paramName).trim().toLowerCase();
-        
-        // Strategy: 1. Specific Tier Match -> 2. Universal Match (Empty Tier)
         var keySpecific = serviceId + "|" + tier + "|" + pName;
         var keyUniversal = serviceId + "|" + "" + "|" + pName;
         
@@ -141,7 +156,7 @@ var ServiceCatalogManager = (function() {
 
         if (rule) {
             total += (rule.unitPrice * quantity);
-            currency = rule.currency; // Last valid currency wins (assuming single currency per SOW)
+            currency = rule.currency; 
         }
      }
      

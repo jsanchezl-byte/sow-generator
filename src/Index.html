@@ -481,9 +481,11 @@
 
   <script>
     /* --- GLOBAL STATE --- */
-    let CAT_SERVICES = []; // Cached Catalog
+    let CAT_SERVICES = [];
     let CURRENT_SOW_DATA = { clientData: {}, services: [] };
-    let CHAT_STATE = 'IDLE'; // IDLE, ASKING_CLIENT, ASKING_EMAIL, ASKING_SOP, ASKING_SERVICES, CONFIRMING
+    let CHAT_STATE = 'IDLE';
+    // State Buffer for complex service configuration
+    let CONFIG_BUFFER = { service: null, tier: null, params: {}, pendingParams: [] };
 
     /* --- INITIALIZATION --- */
     window.onload = function () {
@@ -498,9 +500,7 @@
     function switchView(viewName) {
       document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-
       document.getElementById('view-' + viewName).classList.add('active');
-
       if (viewName === 'dashboard') document.querySelectorAll('.nav-item')[0].classList.add('active');
       if (viewName === 'chat') {
         document.querySelectorAll('.nav-item')[1].classList.add('active');
@@ -509,14 +509,14 @@
     }
 
     /* --- CHAT CONTROLLER --- */
-
     function startChatSession() {
       document.getElementById('chat-stream').innerHTML = '';
       CURRENT_SOW_DATA = { clientData: { vendor: "KIO ITS", startDate: new Date().toISOString().split('T')[0] }, services: [] };
 
-      addBotMessage("👋 Hello! I'm your SOW Architect.");
+      // Icon: Smart Toy (Robot)
+      addBotMessage("<span class='material-icons-round' style='font-size:18px; color:var(--primary); vertical-align:text-bottom;'>smart_toy</span> Hello! I'm your SOW Architect.");
       setTimeout(() => {
-        addBotMessage("Let's create a new Statement of Work. First, what is the **Client Name**?");
+        addBotMessage("Let's create a new Statement of Work. First, what is the <b>Client Name</b>?");
         CHAT_STATE = 'ASKING_CLIENT';
       }, 800);
     }
@@ -525,63 +525,130 @@
 
     function sendMessage(val) {
       let input = document.getElementById('user-input');
-      let text = val || input.value.trim();
-      if (!text) return;
+      let text = val !== undefined ? val : input.value; // Don't trim immediately to detect spaces if needed, but usually trim is fine.
+      text = text.trim();
 
-      // UI Update
-      if (!val) addUserMessage(text);
+      // Special Case: Allow empty input ONLY for Optional Fields
+      if (!text && CHAT_STATE !== 'ASKING_QUOTE' && CHAT_STATE !== 'ASKING_CONTACT') return;
+
+      if (!val) {
+        // Echo back to user (show "(Skipped)" if empty)
+        addUserMessage(text || "(Skipped)");
+      }
+
       input.value = '';
-
-      // LOGIC
       processInput(text);
     }
 
     function processInput(text) {
-      // Delay bot response for realism
       setTimeout(() => {
-
         switch (CHAT_STATE) {
           case 'ASKING_CLIENT':
+            if (!text) {
+              addBotMessage("<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>error_outline</span> <b>Client Name</b> cannot be empty.");
+              return;
+            }
             CURRENT_SOW_DATA.clientData.clientName = text;
-            addBotMessage("Great. Now, what is the **Client Email**?");
+            addBotMessage("Great. Now, what is the <b>Client Email</b>?");
             CHAT_STATE = 'ASKING_EMAIL';
             break;
 
           case 'ASKING_EMAIL':
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!text || !emailRegex.test(text)) {
+              addBotMessage("<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>error_outline</span> Please enter a valid <b>Email Address</b>.");
+              return;
+            }
             CURRENT_SOW_DATA.clientData.clientEmail = text;
-            addBotMessage("Got it. Please enter the **SoP Number** (e.g., 123456).");
+            addBotMessage("Got it. Please enter the <b>SoP Number</b>.");
             CHAT_STATE = 'ASKING_SOP';
             break;
 
           case 'ASKING_SOP':
+            if (!text || !/^\d+$/.test(text)) {
+              addBotMessage("<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>error_outline</span> <b>SoP Number</b> must be numeric digits only.");
+              return;
+            }
             CURRENT_SOW_DATA.clientData.sopNumber = text;
-            addBotMessage("And the **Quote Number**?");
+            addBotMessage("And the <b>Quote Number</b>? (Press Enter to skip)");
             CHAT_STATE = 'ASKING_QUOTE';
             break;
 
           case 'ASKING_QUOTE':
-            CURRENT_SOW_DATA.clientData.quoteNumber = text;
-            addBotMessage("Perfect. Now let's add services.");
-            showServiceOptions(); // Show Buttons
+            let cleanText = text.trim();
+            if (cleanText && cleanText.toLowerCase() !== 'skip') {
+              if (!/^\d+$/.test(cleanText)) {
+                addBotMessage("<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>error_outline</span> <b>Quote Number</b> must be numeric digits only.");
+                return;
+              }
+              CURRENT_SOW_DATA.clientData.quoteNumber = cleanText;
+            } else {
+              // Skip
+              CURRENT_SOW_DATA.clientData.quoteNumber = "";
+            }
+
+            // NEW STEP: Contact Name
+            let cName = CURRENT_SOW_DATA.clientData.clientName;
+            addBotMessage(`Is there a specific <b>Contact Name</b> at ${cName}? (Optional, press Enter to skip)`);
+            CHAT_STATE = 'ASKING_CONTACT';
+            break;
+
+          case 'ASKING_CONTACT':
+            CURRENT_SOW_DATA.clientData.contactName = text.trim(); // Optional, allows empty
+            addBotMessage("Perfect. Let's configure the services.");
+            showServiceOptions();
             CHAT_STATE = 'SELECTING_SERVICE';
             break;
 
-          case 'SELECTING_PARAMS':
-            // handled by custom UI mostly, but if text input
+          case 'ASKING_PARAM_VALUE':
+            let pName = CONFIG_BUFFER.pendingParams[0];
+            let val = parseInt(text);
+
+            if (isNaN(val)) {
+              addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>error_outline</span> Invalid value for <b>${pName}</b>.`);
+              return;
+            }
+
+            let pKey = pName.toLowerCase();
+
+            if (pKey.includes('objectives') || pKey.includes('objetivo')) {
+              if (val < 5) {
+                addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>warning_amber</span> The minimum number of <b>Objectives</b> is 5.`);
+                return;
+              }
+            }
+
+            if (pKey.includes('ticket')) {
+              if (val < 50) {
+                addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>warning_amber</span> The minimum volume for SOC is <b>50 Tickets</b>.`);
+                return;
+              }
+            }
+
+            if (pKey.includes('hour') || pKey.includes('hora')) {
+              if (val < 20) {
+                addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>warning_amber</span> Minimum engagement is <b>20 Hours</b>.`);
+                return;
+              }
+            }
+
+            CONFIG_BUFFER.params[pName] = val;
+            CONFIG_BUFFER.pendingParams.shift(); // Next!
+            askNextParam();
             break;
         }
-
       }, 600);
     }
 
-    /* --- DYNAMIC UI HELPERS --- */
-
+    /* --- SERVICE CONFIGURATION LOGIC --- */
     function showServiceOptions() {
       let html = "<div>Select a service to add:</div><div class='options-container'>";
       CAT_SERVICES.forEach(svc => {
         html += `<div class='option-chip' onclick='selectService("${svc.id}")'>${svc.name}</div>`;
       });
-      html += `<div class='option-chip' style='border-color: #333; color: #333' onclick='finishSelection()'>✅ Done / Generate</div>`;
+      if (CURRENT_SOW_DATA.services.length > 0) {
+        html += `<div class='option-chip' style='border-color: #333; color: #333' onclick='finishSelection()'><span class='material-icons-round' style='font-size:16px; vertical-align:middle;'>check</span> Done / Generate</div>`;
+      }
       html += "</div>";
       addBotHtml(html);
     }
@@ -592,44 +659,141 @@
 
       addUserMessage("Selected: " + svc.name);
 
-      // Simplified: Assume 1st Tier or Ask Tier
-      // For MVP conversational: Just add default params or ask
-      // Let's ask for Tier if available
+      // Reset Buffer
+      CONFIG_BUFFER = { service: svc, tier: "", params: {}, pendingParams: [] };
 
-      // TEMP: Add direct
+      // 1. Tiers
+      if (svc.hasTiers && svc.tiers.length > 0) {
+        addBotMessage(`Please select the **Tier** for ${svc.name}:`);
+        let html = "<div class='options-container'>";
+        svc.tiers.forEach(t => {
+          html += `<div class='option-chip' onclick='selectTier("${t.trim()}")'>${t.trim()}</div>`;
+        });
+        html += "</div>";
+        addBotHtml(html);
+        CHAT_STATE = 'SELECTING_TIER';
+      } else {
+        startParamConfig();
+      }
+    }
+
+    function selectTier(tierName) {
+      addUserMessage(tierName);
+      CONFIG_BUFFER.tier = tierName;
+      startParamConfig();
+    }
+
+    function startParamConfig() {
+      let svc = CONFIG_BUFFER.service;
+
+      // 1. Detect from Metadata (Dynamic)
+      let paramKeys = [];
+      if (svc.configParams && typeof svc.configParams === 'object') {
+        paramKeys = Object.keys(svc.configParams);
+      }
+
+      // 2. FORCE INJECT & CLEAN CRITICAL PARAMS
+      let sId = svc.id.toUpperCase();
+
+      if (sId.includes('SOC')) {
+        if (!paramKeys.includes('tickets')) paramKeys.push('tickets');
+        paramKeys = paramKeys.filter(p => p !== 'ips');
+      }
+
+      if (sId.includes('PENETRATION') || sId.includes('PENTEST')) {
+        if (!paramKeys.includes('objectives')) paramKeys.push('objectives');
+        paramKeys = paramKeys.filter(p => p !== 'ips' && p !== 'tickets');
+      }
+
+      if (sId.includes('AUDIT')) {
+        if (!paramKeys.includes('hours')) paramKeys.push('hours');
+      }
+
+      console.log("Final Config Params for:", svc.name, paramKeys);
+
+      CONFIG_BUFFER.pendingParams = paramKeys;
+      askNextParam();
+    }
+
+    function askNextParam() {
+      if (CONFIG_BUFFER.pendingParams.length > 0) {
+        let nextP = CONFIG_BUFFER.pendingParams[0];
+        CHAT_STATE = 'ASKING_PARAM_VALUE';
+        addBotMessage(`Please enter quantity for **${nextP}**:`);
+      } else {
+        commitService();
+      }
+    }
+
+    function commitService() {
+      let svc = CONFIG_BUFFER.service;
       CURRENT_SOW_DATA.services.push({
         id: svc.id,
-        tier: "Standard", // Hardcoded for simplified chat flow MVP
-        parameters: {}
+        tier: CONFIG_BUFFER.tier || "Standard",
+        parameters: CONFIG_BUFFER.params
       });
-
-      addBotMessage(`Added **${svc.name}**. Add another or click Done.`);
-      // Re-show options
-      // setTimeout(showServiceOptions, 500);
+      addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#2e7d32; vertical-align:text-bottom;'>check_circle</span> <b>${svc.name}</b> added.`);
+      setTimeout(showServiceOptions, 1000);
+      CHAT_STATE = 'SELECTING_SERVICE';
     }
 
     function finishSelection() {
-      if (CURRENT_SOW_DATA.services.length === 0) {
-        addBotMessage("⚠️ You must add at least one service.");
-        return;
-      }
-      addUserMessage("Generate SOW");
-      addBotMessage("Generating Document... 🚀");
+      if (CURRENT_SOW_DATA.services.length === 0) return;
 
-      // CALL SERVER
-      google.script.run
-        .withSuccessHandler(onSuccess)
-        .withFailureHandler(onFailure)
+      let sData = CURRENT_SOW_DATA;
+      let html = `
+            <div class="tool-card" style="cursor:default; border:1px solid var(--primary);">
+                <h3 style="color:var(--primary); margin-bottom:15px;"><span class='material-icons-round' style='font-size:20px; vertical-align:text-bottom;'>receipt_long</span> Configuration Summary</h3>
+                
+                <div style="font-size:14px; color:#666; margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid #eee;">
+                    <strong>Client:</strong> ${sData.clientData.clientName}<br>
+                    <strong>Email:</strong> ${sData.clientData.clientEmail}<br>
+                    <strong>SoP:</strong> ${sData.clientData.sopNumber} | <strong>Quote:</strong> ${sData.clientData.quoteNumber || "N/A"}
+                </div>
+                
+                <div style="margin-bottom:20px;">
+                    ${sData.services.map(s => {
+        let paramsTxt = Object.entries(s.parameters).map(([k, v]) => `${k}: <strong>${v}</strong>`).join(', ');
+        return `
+                        <div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:8px;">
+                            <div style="font-weight:600; font-size:15px;">${s.id} <span style="font-weight:400; font-size:13px; color:var(--primary);">(${s.tier})</span></div>
+                            <div style="font-size:13px; color:#555;">${paramsTxt || "Standard config"}</div>
+                        </div>`;
+      }).join('')}
+                </div>
+
+                <div class="options-container" style="justify-content:flex-end;">
+                     <div class='option-chip' style='border-color: #d32f2f; color: #d32f2f' onclick='startChatSession()'><span class='material-icons-round' style='font-size:16px; vertical-align:middle;'>close</span> Cancel</div>
+                     <div class='option-chip' style='background: var(--primary); color: white;' onclick='confirmGeneration()'><span class='material-icons-round' style='font-size:16px; vertical-align:middle;'>rocket_launch</span> Confirm & Generate</div>
+                </div>
+            </div>
+          `;
+      addBotHtml(html);
+      CHAT_STATE = 'CONFIRMING';
+    }
+
+    function confirmGeneration() {
+      addUserMessage("Confirmed. Generating now.");
+      addBotMessage(`Generating Document... <span class='material-icons-round rotating' style='font-size:16px; vertical-align:middle;'>settings</span>`);
+      google.script.run.withSuccessHandler(onSuccess).withFailureHandler(onFailure)
         .processWebRequest(CURRENT_SOW_DATA.clientData, CURRENT_SOW_DATA.services);
     }
 
     function onSuccess(result) {
-      addBotMessage(`✅ **Success!** <br><a href="${result.url}" target="_blank" style="color:var(--primary); font-weight:bold;">Click here to open SOW (v${result.version})</a>`);
+      addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#2e7d32; vertical-align:text-bottom;'>check_circle</span> <b>Success!</b> <br><a href="${result.url}" target="_blank" style="color:var(--primary); font-weight:bold;">Open SOW (v${result.version})</a>`);
       triggerConfetti();
+
+      setTimeout(() => {
+        addBotMessage("Would you like to generate another SOW?");
+        let html = "<div class='options-container'>" +
+          "<div class='option-chip' onclick='startChatSession()'><span class='material-icons-round' style='font-size:16px; vertical-align:middle;'>refresh</span> Create New SOW</div>" +
+          "</div>";
+        addBotHtml(html);
+      }, 2000);
     }
 
     function onFailure(err) {
-      addBotMessage("❌ Error: " + err.message);
+      addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>error</span> Error: ${err.message}`);
     }
 
     /* --- RENDERERS --- */
