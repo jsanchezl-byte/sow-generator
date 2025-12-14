@@ -311,6 +311,13 @@ function runSheetAudit() {
 }
 
 /**
+ * Wrapper to call the HelpGuideGenerator module
+ */
+function generateGuideWrapper() {
+  generateAdminGuide();
+}
+
+/**
  * UI TRIGGER
  * Adds a custom menu to the spreadsheet when opened.
  * (Only works if this script is bound to the Spreadsheet)
@@ -321,6 +328,8 @@ function onOpen() {
     var ui = SpreadsheetApp.getUi();
     ui.createMenu('🚀 SOW Generator')
       .addItem('🔍 Auditar Hojas y Columnas', 'runSheetAudit')
+      .addSeparator()
+      .addItem('📘 Generar Guía de Instrucciones', 'generateGuideWrapper')
       .addToUi();
   } catch (e) {
     // Silent fail if run from standalone script or non-spreadsheet context

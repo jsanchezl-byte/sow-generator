@@ -128,8 +128,33 @@ var SheetValidator = (function() {
     console.log("Auditoría Dinámica completada.");
   }
 
+  /**
+   * Checks if AUDIT_LOG exists and has all required columns (including new Vendor/SoP).
+   * If missing, adds them.
+   */
+  function ensureAuditLogStructure() {
+      var ss = SpreadsheetApp.openById(CONFIG.SHEET_SERVICES_ID);
+      var sheet = ss.getSheetByName("AUDIT_LOG");
+      if (!sheet) return; // AuditLogger creates it, so we assume it exists or will be created on first run
+      
+      var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      
+      // Define Expected Headers (Map name to index or existence)
+      var expected = ["Vendor", "SoS Code", "Quote"];
+      
+      expected.forEach(function(colName) {
+          if (headers.indexOf(colName) === -1) {
+              console.log("Adding missing column to AUDIT_LOG: " + colName);
+              // Add to the end
+              var nextCol = sheet.getLastColumn() + 1;
+              sheet.getRange(1, nextCol).setValue(colName).setFontWeight("bold").setBackground("#E0E0E0");
+          }
+      });
+  }
+
   return {
-    auditSpreadsheetStructure: auditSpreadsheetStructure
+    auditSpreadsheetStructure: auditSpreadsheetStructure,
+    ensureAuditLogStructure: ensureAuditLogStructure
   };
 
 })();

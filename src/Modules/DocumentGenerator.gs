@@ -26,16 +26,24 @@ var DocumentGenerator = (function() {
         throw new Error("Fallo al acceder/crear carpeta de Cliente: " + e.message);
     }
     
-    var version = 1; 
-    var newDocName = "SOW_" + clientData.clientName.replace(/\s+/g, '') + "_v" + version;
-    
-    // 2. Clone Master Template
+    // 2. Smart Naming & Versioning
+    var newDocName = "";
+    var version = 0;
+    try {
+        var namingResult = _generateSmartFileName(clientData, services, clientFolderId);
+        newDocName = namingResult.name;
+        version = namingResult.version;
+        console.log("Nombre calculado: " + newDocName + " (v" + version + ")");
+    } catch (e) {
+        throw new Error("Error calculando nombre/versión: " + e.message);
+    }
+
     var newDocId;
     try {
         console.log("Copiando plantilla maestra (ID: " + config.SOW_MASTER_TEMPLATE_ID + ")...");
         newDocId = FileManager.copyDocument(config.SOW_MASTER_TEMPLATE_ID, newDocName, clientFolderId);
     } catch (e) {
-        throw new Error("Fallo al copiar la Plantilla Maestra. Verifica que el ID sea correcto y tengas permisos de 'Ver/Editar' sobre ella. Error: " + e.message);
+        throw new Error("Fallo al copiar la Plantilla Maestra. Verifica ID y permisos. Error: " + e.message);
     }
     
     var doc;
@@ -145,6 +153,16 @@ var DocumentGenerator = (function() {
       
       // Add 'Today'
       body.replaceText("{{FECHA_HOY}}", new Date().toLocaleDateString());
+
+      // Handle Optional 'Quote' {{QUOTE}}
+      // If present, prefix with Q-. If empty, clear placeholder.
+      if (data.quoteNumber && data.quoteNumber.toString().trim() !== "") {
+          body.replaceText("{{QUOTE}}", "Q-" + data.quoteNumber);
+      } else {
+          // User didn't provide a quote number.
+          // We must remove the placeholder so it doesn't look ugly.
+          body.replaceText("{{QUOTE}}", "");
+      }
   }
   
   function _injectServicesTable(body, services) {
@@ -320,6 +338,116 @@ var DocumentGenerator = (function() {
       totalRow.appendTableCell(""); // Empty Qty
       totalRow.appendTableCell(""); // Empty Monthly
       totalRow.appendTableCell("$ 0.00").setBold(true);
+  }
+
+  /**
+   * Generates the rigorous SOW filename.
+   * Format: SOW_{{RESUMEN}}_{{VENDOR}}_{{CLIENT}}_{{YYMMDD}}_{{SoP}}_V{{VER}}
+   */
+  function _generateSmartFileName(clientData, services, folderId) {
+      // 1. SERVICES SUMMARY (Use IDs for brevity)
+      var svcNames = services.map(function(s) { return s.serviceId; });
+      var unique = [];
+      var seen = {};
+      svcNames.forEach(function(n) {
+          var k = n.toString().toLowerCase().trim();
+          if (!seen[k]) { unique.push(n.trim()); seen[k] = true; }
+      });
+      
+      var resumen = "";
+      // Join all unique Service IDs with a hyphen for a clean technical name
+      // Example: SOC-PenetrationTest-Phishing
+      resumen = unique.concat(svcNames.filter(function(item) {
+           return unique.indexOf(item) < 0; // Fallback logic if needed, but unique is already filtered
+      })).slice(0, unique.length).join("-"); 
+      
+      // Simplification: Since 'unique' array already holds the distinct IDs:
+      resumen = unique.join("-");
+      
+      if (resumen === "") resumen = "General";
+      // Sanitize: Normalize Accents (ó->o), then cleaning
+      resumen = resumen.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      resumen = resumen.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9\-_]/g, "").substring(0, 50);
+
+      // 2. VENDOR
+      var vendorRaw = (clientData.vendor || "KIO ITS");
+      var vendor = vendorRaw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+      vendor = vendor.replace(/\s+/g, "-").replace(/[^A-Z0-9\-]/g, "");
+
+      // 3. CLIENT
+      var clientRaw = (clientData.clientName || "Unknown");
+      var client = clientRaw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      client = client.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9\-_]/g, "");
+
+      // 4. DATE (aaammdd -> yyyyMMdd per user feedback interpreted as full year or specific layout)
+      // User said "format is 251213 and should be aaammdd". 'aaa' implies nothing standard, likely year-month-day full or just typo.
+      // I will assume YYYYMMDD (20251213) for safety and clarity.
+      var dateStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyyMMdd");
+
+      // 5. SoP
+      // Ensure "SoP-" prefix is present
+      var rawSop = String(clientData.sopNumber || "000000").trim();
+      if (!rawSop.toLowerCase().startsWith("sop-")) {
+          // Check if user already typed SoP-
+          // If purely numeric, add prefix
+          if (/^\d+$/.test(rawSop)) {
+             rawSop = "SoP-" + rawSop;
+          } else {
+             // Mixed text, ensure prefix
+             if(rawSop.indexOf("-") === -1) rawSop = "SoP-" + rawSop; 
+          }
+      }
+      var sopTag = rawSop.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9\-]/g, ""); 
+
+      // 6. VERSIONING
+      var folder = DriveApp.getFolderById(folderId);
+      var version = _findNextVersion(folder, sopTag);
+
+      // ASSEMBLE
+      var fullName = "SOW_" + resumen + "_" + vendor + "_" + client + "_" + dateStr + "_" + sopTag + "_V" + version;
+      
+      return {
+          name: fullName,
+          version: version
+      };
+  }
+
+  /**
+   * Scans a folder for files matching the SoP tag and determines the next version.
+   */
+  function _findNextVersion(folder, sopTag) {
+      if (!folder) return 1;
+      
+      // We look for files containing the SoP Tag to link versions logic to that Opportunity
+      // Pattern expected: ..._SoP-12345_V(\d+)
+      // Note: files.next() is slow if folder has thousands of files. Usually Clients folders are small.
+      var files = folder.getFiles();
+      var maxVer = 0;
+      var foundAny = false;
+      
+      // Escape SoP for RegEx
+      var escapedSoP = sopTag.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      // Regex to capture version number at the end of filename (ignoring extension via Google Drive logic usually, but name string might have it?) 
+      // DriveApp getName() usually does NOT include extension for Google Docs, but does for PDFs.
+      // We look for "_V" followed by digits at end of string or before dot
+      var versionRegex = new RegExp(escapedSoP + ".*_V(\\d+)", "i");
+
+      while (files.hasNext()) {
+          var file = files.next();
+          var name = file.getName();
+          
+          if (name.indexOf(sopTag) !== -1) {
+              foundAny = true;
+              var match = name.match(versionRegex);
+              if (match && match[1]) {
+                  var v = parseInt(match[1], 10);
+                  if (v > maxVer) maxVer = v;
+              }
+          }
+      }
+
+      // If it's a new SoP for this folder, start at 1. If exists, increment.
+      return maxVer + 1;
   }
 
   return {

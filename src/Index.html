@@ -206,6 +206,26 @@
       <label>Fecha de Inicio del Proyecto</label>
       <input type="date" id="startDate">
 
+      <label>Vendor (Proveedor)</label>
+      <select id="vendorSelect" onchange="toggleVendorInput()">
+        <option value="KIO ITS">KIO ITS</option>
+        <option value="OTRO">Otro...</option>
+      </select>
+      <input type="text" id="vendorOther" placeholder="Escribe el nombre del proveedor..."
+        style="display:none; margin-top:-15px;">
+
+      <label>SoP (Sales Opportunity)</label>
+      <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 20px;">
+        <span style="font-weight: bold; color: #555;">SoP-</span>
+        <input type="number" id="sopNumber" placeholder="Ej: 223958" style="margin-bottom: 0;">
+      </div>
+
+      <label>Quote (Cotización) <span style="font-weight:normal; color:#888;">(Opcional)</span></label>
+      <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 20px;">
+        <span style="font-weight: bold; color: #555;">Q-</span>
+        <input type="number" id="quoteNumber" placeholder="Ej: 1400" style="margin-bottom: 0;">
+      </div>
+
       <button class="btn" onclick="goToStep2()">Siguiente ➜</button>
     </div>
 
@@ -256,13 +276,31 @@
       document.getElementById('step' + n).classList.add('active');
     }
 
+    function toggleVendorInput() {
+      var select = document.getElementById('vendorSelect');
+      var input = document.getElementById('vendorOther');
+      if (select.value === 'OTRO') {
+        input.style.display = 'block';
+        input.focus();
+      } else {
+        input.style.display = 'none';
+        input.value = ""; // Clean
+      }
+    }
+
     function goToStep2() {
       const name = document.getElementById('clientName').value;
       const email = document.getElementById('clientEmail').value;
       const date = document.getElementById('startDate').value;
+      const sop = document.getElementById('sopNumber').value;
 
-      if (!name || !email || !date) {
-        alert("Por favor completa todos los campos del cliente.");
+      var vendor = document.getElementById('vendorSelect').value;
+      if (vendor === 'OTRO') {
+        vendor = document.getElementById('vendorOther').value;
+      }
+
+      if (!name || !email || !date || !sop || !vendor) {
+        alert("Por favor completa todos los campos (Cliente, Fecha, SoP, Vendor).");
         return;
       }
       showStep(2);
@@ -367,7 +405,10 @@
       const clientData = {
         clientName: document.getElementById('clientName').value,
         clientEmail: document.getElementById('clientEmail').value,
-        startDate: document.getElementById('startDate').value
+        startDate: document.getElementById('startDate').value,
+        sopNumber: document.getElementById('sopNumber').value,
+        quoteNumber: document.getElementById('quoteNumber').value,
+        vendor: document.getElementById('vendorSelect').value === 'OTRO' ? document.getElementById('vendorOther').value : document.getElementById('vendorSelect').value
       };
 
       const serviceRows = document.querySelectorAll('.service-row');
@@ -442,6 +483,10 @@
       document.getElementById('clientName').value = "";
       document.getElementById('clientEmail').value = "";
       document.getElementById('startDate').value = "";
+      document.getElementById('sopNumber').value = "";
+      document.getElementById('quoteNumber').value = "";
+      document.getElementById('vendorSelect').value = "KIO ITS";
+      toggleVendorInput();
 
       // 2. Clear Services
       document.getElementById('services-container').innerHTML = "";

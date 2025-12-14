@@ -103,7 +103,10 @@ var AuditLogger = (function() {
             link,
             data.fileId || "",
             data.durationMs || 0,
-            data.message || "" // For errors
+            data.message || "", // For errors
+            data.vendor || "",
+            data.sopNumber || "",
+            data.quoteNumber || ""
         ]);
         
     } catch (e) {
