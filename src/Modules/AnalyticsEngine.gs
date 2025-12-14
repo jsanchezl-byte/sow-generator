@@ -27,8 +27,9 @@ function getDashboardStats() {
             return stats; 
         }
 
-    
-    var sheet = ss.getSheetByName("SOW_LOGS");
+
+    var sheetName = (typeof CONFIG !== 'undefined' && CONFIG.sheets && CONFIG.sheets.AUDIT) ? CONFIG.sheets.AUDIT : "SOW_LOGS";
+    var sheet = ss.getSheetByName(sheetName);
     if (!sheet) return stats; // No logs yet
     
     var lastRow = sheet.getLastRow();

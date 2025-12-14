@@ -42,7 +42,7 @@ var AuditLogger = (function() {
            return;
         }
 
-        var sheetName = "SOW_LOGS";
+        var sheetName = (typeof CONFIG !== 'undefined' && CONFIG.sheets && CONFIG.sheets.AUDIT) ? CONFIG.sheets.AUDIT : "SOW_LOGS";
         var sheet = ss.getSheetByName(sheetName);
         
         // If sheet doesn't exist, create it and add headers
