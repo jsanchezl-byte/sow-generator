@@ -558,19 +558,16 @@
 
         function loadDashboardStats() {
           google.script.run.withSuccessHandler((stats) => {
-            if (stats.error || !stats.totalSows) {
+            // Always update numbers (even if 0)
+            document.getElementById('stat-total').innerText = stats.totalSows || 0;
+            document.getElementById('stat-hours').innerText = (stats.hoursSaved || 0) + "h";
+
+            // Recent Activity
+            if (!stats.recentActivity || stats.recentActivity.length === 0) {
               document.getElementById('recent-activity').innerHTML = "No activity yet.";
-              return;
-            }
+            } else {
+              let actHtml = "<div style='font-weight:600; margin-bottom:8px; display:flex; align-items:center; gap:5px; padding-bottom:5px; border-bottom:1px solid #ddd;'><span class='material-icons-round' style='font-size:14px;'>history</span> Recent Activity</div>";
 
-            // Animate Numbers
-            document.getElementById('stat-total').innerText = stats.totalSows;
-            document.getElementById('stat-hours').innerText = stats.hoursSaved + "h";
-
-            // Recent Activity Micro-List
-            let actHtml = "";
-            if (stats.recentActivity && stats.recentActivity.length > 0) {
-              actHtml += "<div style='font-weight:600; margin-bottom:8px; display:flex; align-items:center; gap:5px; padding-bottom:5px; border-bottom:1px solid #ddd;'><span class='material-icons-round' style='font-size:14px;'>history</span> Recent Activity</div>";
               stats.recentActivity.forEach(a => {
                 // Clean Service Name
                 let svcRaw = a.services || "";
@@ -585,9 +582,10 @@
                        </div>
                        <div style="font-size:11px; color:#888;">${svcShort}</div>
                    </div>`;
+
               });
+              document.getElementById('recent-activity').innerHTML = actHtml;
             }
-            document.getElementById('recent-activity').innerHTML = actHtml;
 
           }).getDashboardStats();
         }

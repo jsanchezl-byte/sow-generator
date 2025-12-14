@@ -4,22 +4,29 @@
  */
 
 function getDashboardStats() {
-  try {
-    var ss;
-    if (typeof CONFIG !== 'undefined' && CONFIG.SHEET_SERVICES_ID) {
-       ss = SpreadsheetApp.openById(CONFIG.SHEET_SERVICES_ID);
-    } else {
-       // Fallback for dev mode
-       ss = SpreadsheetApp.getActiveSpreadsheet(); 
-    }
-    
-    // Fallback if no logs yet
+    // Fallback if no logs yet or error
     var stats = {
         totalSows: 0,
         hoursSaved: 0,
-        topServices: [], // {name, count}
-        recentActivity: [] // {client, service, time}
+        topServices: [], 
+        recentActivity: []
     };
+
+    try {
+        var ss;
+        // Prioritize Config ID
+        if (typeof CONFIG !== 'undefined' && CONFIG.SHEET_SERVICES_ID) {
+           ss = SpreadsheetApp.openById(CONFIG.SHEET_SERVICES_ID);
+        } else {
+           // Fallback (might fail in WebApp)
+           ss = SpreadsheetApp.getActiveSpreadsheet(); 
+        }
+        
+        if (!ss) {
+            console.warn("Analytics: No spreadsheet accessible.");
+            return stats; 
+        }
+
     
     var sheet = ss.getSheetByName("SOW_LOGS");
     if (!sheet) return stats; // No logs yet
@@ -83,6 +90,6 @@ function getDashboardStats() {
     
   } catch (e) {
     console.error("Analytics Error: " + e.message);
-    return { error: true, msg: e.message };
+    return stats;
   }
 }
