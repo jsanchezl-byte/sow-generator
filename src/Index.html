@@ -486,26 +486,43 @@
           <h1>Cybersecurity SOW Suite</h1>
           <p style="color: #666; margin-bottom: 30px;">Automated Architecture & Scoping Assistant</p>
 
+
           <!-- ANALYTICS DASHBOARD -->
-          <div class="kpi-row">
+          <div id="demo-badge"
+            style="display:none; background:#ff9800; color:white; font-size:10px; padding:2px 6px; border-radius:4px; margin-bottom:10px; width:fit-content;">
+            DEMO MODE</div>
+
+          <div class="kpi-row" style="display:flex; gap:15px; margin-bottom:25px;">
             <div class="kpi-card">
-              <span class="kpi-num" id="stat-total">...</span>
+              <span class="kpi-num" id="stat-total">0</span>
               <span class="kpi-label">SOWs Generated</span>
             </div>
             <div class="kpi-card">
-              <span class="kpi-num" id="stat-hours">...</span>
+              <span class="kpi-num" id="stat-hours">0h</span>
               <span class="kpi-label">Hours Saved</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-num" id="stat-rate">0%</span>
+              <span class="kpi-label">Completion Rate</span>
             </div>
           </div>
 
-          <button class="btn-primary" onclick="switchView('chat')">
+          <button class="btn-primary" onclick="switchView('chat')" style="width:100%; margin-bottom:30px;">
             <span class="material-icons-round">play_arrow</span> Start New SOW
           </button>
 
-          <div id="recent-activity"
-            style="margin-top: 30px; font-size: 13px; color: #888; text-align: left; width: 100%; max-width: 320px;">
-            <!-- Dynamic Content -->
+          <div style="display:flex; gap:30px; align-items:flex-start;">
+            <!-- Recent Activity -->
+            <div id="recent-activity" style="flex:1; font-size: 13px; color: #888; text-align: left;">
+              <!-- Dynamic -->
+            </div>
+
+            <!-- Top Services -->
+            <div id="top-services" style="flex:1; font-size: 13px; color: #888; text-align: left;">
+              <!-- Dynamic -->
+            </div>
           </div>
+
         </div>
 
       </div>
@@ -524,7 +541,6 @@
         </div>
 
         <div class="chat-messages" id="chat-stream">
-          <!-- Messages go here -->
           <div class="msg bot">Hello! I'm your SOW assistant. Ready to create a new document?</div>
         </div>
 
@@ -562,33 +578,47 @@
 
     function loadDashboardStats() {
       google.script.run.withSuccessHandler((stats) => {
-        // Always update numbers (even if 0)
+        // Update KPIs
         document.getElementById('stat-total').innerText = stats.totalSows || 0;
         document.getElementById('stat-hours').innerText = (stats.hoursSaved || 0) + "h";
+        document.getElementById('stat-rate').innerText = stats.completionRate || "0%";
+
+        if (stats.isDemo) {
+          document.getElementById('demo-badge').style.display = 'block';
+        }
 
         // Recent Activity
         if (!stats.recentActivity || stats.recentActivity.length === 0) {
           document.getElementById('recent-activity').innerHTML = "No activity yet.";
         } else {
-          let actHtml = "<div style='font-weight:600; margin-bottom:8px; display:flex; align-items:center; gap:5px; padding-bottom:5px; border-bottom:1px solid #ddd;'><span class='material-icons-round' style='font-size:14px;'>history</span> Recent Activity</div>";
-
+          let actHtml = "<div style='font-weight:600; margin-bottom:10px; border-bottom:1px solid #ddd; padding-bottom:5px;'>Recent Activity</div>";
           stats.recentActivity.forEach(a => {
-            // Clean Service Name
-            let svcRaw = a.services || "";
-            let svcShort = svcRaw.length > 30 ? svcRaw.substring(0, 30) + "..." : svcRaw;
-            // Nice date format if possible, otherwise raw
-            let dateStr = new Date(a.date).toLocaleDateString();
-
-            actHtml += `<div style="padding: 8px 0; border-bottom: 1px solid #f9f9f9; display:flex; flex-direction:column; gap:2px;">
-                       <div style="display:flex; justify-content:space-between; font-weight:500; color:#333;">
-                           <span>${a.client}</span>
-                           <span style="font-size:10px; color:#999;">${dateStr}</span>
-                       </div>
-                       <div style="font-size:11px; color:#888;">${svcShort}</div>
-                   </div>`;
-
+            let svcShort = (a.services || "").length > 25 ? (a.services || "").substring(0, 25) + "..." : (a.services || "");
+            let dateStr = new Date(a.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            actHtml += `<div style="padding: 6px 0; border-bottom: 1px dashed #eee; display:flex; justify-content:space-between;">
+                   <div style="font-weight:500; color:#333;">${a.client}</div>
+                   <div style="font-size:11px; color:#999;">${dateStr}</div>
+               </div>
+               <div style="font-size:11px; color:#aaa; margin-bottom:4px;">${svcShort}</div>`;
           });
           document.getElementById('recent-activity').innerHTML = actHtml;
+        }
+
+        // Top Services (Visual Bars)
+        if (stats.topServices && stats.topServices.length > 0) {
+          let topHtml = "<div style='font-weight:600; margin-bottom:10px; border-bottom:1px solid #ddd; padding-bottom:5px;'>Top Services</div>";
+          stats.topServices.forEach(s => {
+            topHtml += `<div style="margin-bottom:12px;">
+                    <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:3px;">
+                        <span>${s.name}</span>
+                        <strong>${s.pct}%</strong>
+                    </div>
+                    <div style="height:6px; background:#eee; border-radius:3px; overflow:hidden;">
+                        <div style="height:100%; background:var(--primary); width:${s.pct}%;"></div>
+                    </div>
+                 </div>`;
+          });
+          document.getElementById('top-services').innerHTML = topHtml;
         }
 
       }).getDashboardStats();
