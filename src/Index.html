@@ -498,7 +498,7 @@
             </div>
           </div>
 
-          <button class="btn-primary" onclick="startChatSession()">
+          <button class="btn-primary" onclick="switchView('chat')">
             <span class="material-icons-round">play_arrow</span> Start New SOW
           </button>
 
@@ -894,18 +894,14 @@
         }
 
         function onSuccess(result) {
-          addBotMessage(`<span class='material-icons-round'
-              style='font-size:16px; color:#2e7d32; vertical-align:text-bottom;'>check_circle</span> <b>Success!</b>
-            <br><a href="${result.url}" target="_blank" style="color:var(--primary); font-weight:bold;">Open SOW
-              (v${result.version})</a>`);
+          addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#2e7d32; vertical-align:text-bottom;'>check_circle</span> <b>Success!</b> <br><a href="${result.url}" target="_blank" style="color:var(--primary); font-weight:bold;">Open SOW (v${result.version})</a>`);
           triggerConfetti();
 
           setTimeout(() => {
             addBotMessage("Would you like to generate another SOW?");
             let html = "<div class='options-container'>" +
-              "<div class='option-chip' onclick='startChatSession()'><span class='material-icons-round'
-            style = 'font-size:16px; vertical-align:middle;' > refresh</span > Create New SOW</div > " +
-            "</div>";
+              "<div class='option-chip' onclick='startChatSession()'><span class='material-icons-round' style='font-size:16px; vertical-align:middle;'>refresh</span> Create New SOW</div>" +
+              "</div>";
             addBotHtml(html);
           }, 2000);
         }
