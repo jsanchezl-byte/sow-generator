@@ -1,21 +1,5 @@
 /**
  * @file Main.gs
- * @description Entry point for SOW Generator. Handles Form triggers and webhooks.
- */
-
-/* 
- * GLOBAL// CONFIGURATION
-// ==========================================
-// Replace these with your actual IDs
-// CONFIG MOVED TO Config.gs
-
-
-// ==========================================
-// WEB APP LOGIC MOVED TO WebApp.gs
-
-
-// ==========================================
-// GOOGLE CHAT ENTRY POINTS REMOVED
 // ==========================================
 
 

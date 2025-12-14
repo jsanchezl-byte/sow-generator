@@ -345,59 +345,45 @@ var DocumentGenerator = (function() {
    * Format: SOW_{{RESUMEN}}_{{VENDOR}}_{{CLIENT}}_{{YYMMDD}}_{{SoP}}_V{{VER}}
    */
   function _generateSmartFileName(clientData, services, folderId) {
-      // 1. SERVICES SUMMARY (Use IDs for brevity)
-      var svcNames = services.map(function(s) { return s.serviceId; });
+      // 1. SERVICES SUMMARY (Use IDs)
       var unique = [];
       var seen = {};
-      svcNames.forEach(function(n) {
-          var k = n.toString().toLowerCase().trim();
-          if (!seen[k]) { unique.push(n.trim()); seen[k] = true; }
+      services.forEach(function(s) {
+          var id = (s.serviceId || "Unknown").trim();
+          var k = id.toLowerCase();
+          if (!seen[k]) { unique.push(id); seen[k] = true; }
       });
       
-      var resumen = "";
-      // Join all unique Service IDs with a hyphen for a clean technical name
-      // Example: SOC-PenetrationTest-Phishing
-      resumen = unique.concat(svcNames.filter(function(item) {
-           return unique.indexOf(item) < 0; // Fallback logic if needed, but unique is already filtered
-      })).slice(0, unique.length).join("-"); 
-      
-      // Simplification: Since 'unique' array already holds the distinct IDs:
-      resumen = unique.join("-");
-      
+      var resumen = unique.join("-");
       if (resumen === "") resumen = "General";
-      // Sanitize: Normalize Accents (ó->o), then cleaning
-      resumen = resumen.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      resumen = resumen.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9\-_]/g, "").substring(0, 50);
+      
+      // Sanitizers
+      resumen = _sanitizeName(resumen).substring(0, 50);
 
       // 2. VENDOR
-      var vendorRaw = (clientData.vendor || "KIO ITS");
-      var vendor = vendorRaw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
-      vendor = vendor.replace(/\s+/g, "-").replace(/[^A-Z0-9\-]/g, "");
+      var vendor = _sanitizeName(clientData.vendor || "KIO ITS").toUpperCase();
 
       // 3. CLIENT
-      var clientRaw = (clientData.clientName || "Unknown");
-      var client = clientRaw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-      client = client.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9\-_]/g, "");
+      var client = _sanitizeName(clientData.clientName || "Unknown");
 
-      // 4. DATE (aaammdd -> yyyyMMdd per user feedback interpreted as full year or specific layout)
-      // User said "format is 251213 and should be aaammdd". 'aaa' implies nothing standard, likely year-month-day full or just typo.
-      // I will assume YYYYMMDD (20251213) for safety and clarity.
+      // 4. DATE (yyyyMMdd)
       var dateStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyyMMdd");
 
-      // 5. SoP
-      // Ensure "SoP-" prefix is present
+      // 5. SoP (Enforce SoP- prefix)
       var rawSop = String(clientData.sopNumber || "000000").trim();
-      if (!rawSop.toLowerCase().startsWith("sop-")) {
-          // Check if user already typed SoP-
-          // If purely numeric, add prefix
-          if (/^\d+$/.test(rawSop)) {
+      // Logic to ensure SoP- prefix exists
+      if (!/^sop-/i.test(rawSop)) {
+         // If numeric only, prepend. If mixed, check if it has dash.
+         // Simplified: Just ensure it starts with SoP- if user didn't type it
+         // But user might type "SOP 123". Let's clean it.
+         if (/^\d+$/.test(rawSop)) {
              rawSop = "SoP-" + rawSop;
-          } else {
-             // Mixed text, ensure prefix
-             if(rawSop.indexOf("-") === -1) rawSop = "SoP-" + rawSop; 
-          }
+         } else if (rawSop.toLowerCase().indexOf("sop") === -1) {
+             // Does not contain sop at all
+             rawSop = "SoP-" + rawSop;
+         }
       }
-      var sopTag = rawSop.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9\-]/g, ""); 
+      var sopTag = _sanitizeName(rawSop);
 
       // 6. VERSIONING
       var folder = DriveApp.getFolderById(folderId);
@@ -410,6 +396,19 @@ var DocumentGenerator = (function() {
           name: fullName,
           version: version
       };
+  }
+
+  /**
+   * Helper to sanitize strings for filenames.
+   * Removes accents, spaces to hyphens, keeps alphanumeric.
+   */
+  function _sanitizeName(str) {
+      if (!str) return "";
+      return str.normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "") // Remove accents
+                .trim()
+                .replace(/\s+/g, "-") // Spaces to hyphens
+                .replace(/[^a-zA-Z0-9\-_]/g, ""); // Remove invalid chars
   }
 
   /**

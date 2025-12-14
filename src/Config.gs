@@ -5,18 +5,26 @@
  */
 
 var CONFIG = {
-  // ID of your Master Google Doc Template
-  SOW_MASTER_TEMPLATE_ID: "1Fh-KYb--kGe17S5XKW5jwxxvY35PKeQZ4KVWHCb491I", 
+  // IDs de la Infraestructura (Production IDs)
+  SOW_MASTER_TEMPLATE_ID: "1Fh-KYb--kGe17S5XKW5jwxxvY35PKeQZ4KVWHCb491I",
+  SHEET_SERVICES_ID: "1uGCr1JmmpSQeCQbiU_QYG4uZ5NfG-MLc7exVPDY5k6A",
+  
+  // Estructura de Carpetas directas (Legacy support + New structure)
+  CLIENTES_FOLDER_ID: "1JYcnLobiJhSjlUvyA-1apHn0Y4i9d8OT",
+  SERVICIOS_FOLDER_ID: "1s5x3QPsTmrG6shoATalhq0IYTxAscA4b",
 
-  // Folder where SOWs will be saved (Clientes)
-  CLIENTES_FOLDER_ID: "1JYcnLobiJhSjlUvyA-1apHn0Y4i9d8OT",     
+  // Nombres de Hojas (Fuente de Verdad Única)
+  sheets: {
+      CATALOG: "SERVICIOS",
+      PRICING: "SERVICIO_PARAMETROS",
+      AUDIT: "AUDIT_LOG",
+      ADMIN_GUIDE: "INSTRUCCIONES_ADMIN",
+      CONFIG: "CONFIGURACION"
+  },
 
-  // Folder containing Service Descriptions (Servicios)
-  SERVICIOS_FOLDER_ID: "1s5x3QPsTmrG6shoATalhq0IYTxAscA4b",  
-
-  // Spreadsheet with Service Catalog & Pricing (SOW_DB)
-  SHEET_SERVICES_ID: "1uGCr1JmmpSQeCQbiU_QYG4uZ5NfG-MLc7exVPDY5k6A",       
-
-  // Set to true if you want PDF export
-  GENERATE_PDF: false                       
+  // Configuración de Negocio
+  rules: {
+      MIN_OBJECTIVES: 5,
+      MIN_TICKETS: 50
+  }
 };
