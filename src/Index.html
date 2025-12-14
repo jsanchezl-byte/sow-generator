@@ -3,504 +3,668 @@
 
 <head>
   <base target="_top">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KIO Cyber Architecture</title>
+  <!-- Fonts: Outfit for Modern Tech Feel -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <!-- Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <!-- Effects -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
   <style>
     :root {
-      --primary: #673AB7;
+      /* KIO Cyber Palette */
+      --primary: #4A148C;
       /* Deep Purple */
-      --secondary: #9575CD;
-      /* Soft Purple */
-      --light: #EDE7F6;
-      /* Lavanda Light */
-      --white: #ffffff;
-      --text: #333333;
-      --success: #4CAF50;
+      --primary-light: #7C43BD;
+      --accent: #00BCD4;
+      /* Cyan Tech Accent */
+      --bg-app: #F4F6F9;
+      /* Light Corporate Gray */
+      --bg-panel: #FFFFFF;
+      /* White Cards */
+      --text-main: #1A1A1A;
+      --text-muted: #666666;
+      --border-radius: 16px;
+      --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.05);
+      --shadow-hover: 0 10px 25px rgba(74, 20, 140, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
     body {
-      font-family: 'Roboto', sans-serif;
-      background-color: #F8F9FA;
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      height: 100vh;
+      overflow: hidden;
       display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      margin: 0;
     }
 
-    .container {
-      background: var(--white);
-      width: 100%;
-      max-width: 500px;
-      padding: 40px;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    }
-
-    h1 {
-      color: var(--primary);
-      font-weight: 700;
-      text-align: center;
-      margin-bottom: 30px;
-      font-size: 24px;
-    }
-
-    .step {
-      display: none;
-      animation: fadeIn 0.4s ease-in-out;
-    }
-
-    .step.active {
-      display: block;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 8px;
-      color: #555;
-      font-weight: 500;
-      font-size: 14px;
-    }
-
-    input,
-    select {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 20px;
-      border: 2px solid #ddd;
-      border-radius: 8px;
-      box-sizing: border-box;
-      font-size: 16px;
-      transition: border 0.3s;
-    }
-
-    input:focus,
-    select:focus {
-      border-color: var(--secondary);
-      outline: none;
-    }
-
-    .btn {
-      width: 100%;
-      padding: 14px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.3s, transform 0.1s;
-    }
-
-    .btn:hover {
-      background: var(--secondary);
-    }
-
-    .btn:active {
-      transform: scale(0.98);
-    }
-
-    .btn-secondary {
-      background: #e0e0e0;
-      color: #555;
-      margin-top: 10px;
-    }
-
-    .checkbox-group {
+    /* SIDEBAR */
+    .sidebar {
+      width: 80px;
+      background: var(--bg-panel);
+      height: 100%;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      margin-bottom: 20px;
+      align-items: center;
+      padding-top: 20px;
+      box-shadow: 4px 0 10px rgba(0, 0, 0, 0.02);
+      z-index: 10;
+      transition: width 0.3s ease;
     }
 
-    .checkbox-item {
+    .sidebar:hover {
+      width: 240px;
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 12px;
+      margin-bottom: 40px;
       display: flex;
       align-items: center;
-      background: var(--light);
-      padding: 10px;
-      border-radius: 8px;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 20px;
       cursor: pointer;
+      box-shadow: 0 4px 10px rgba(74, 20, 140, 0.3);
     }
 
-    .checkbox-item input {
-      width: auto;
-      margin: 0 10px 0 0;
+    .nav-item {
+      width: 100%;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      padding-left: 28px;
+      color: var(--text-muted);
       cursor: pointer;
+      transition: 0.2s;
+      margin-bottom: 8px;
+      position: relative;
+      white-space: nowrap;
     }
 
-    /* Services List Styles */
-    .service-row {
-      background: #fff;
-      border: 1px solid #ddd;
-      padding: 15px;
-      border-radius: 8px;
+    .nav-item:hover,
+    .nav-item.active {
+      color: var(--primary);
+      background: rgba(74, 20, 140, 0.05);
+    }
+
+    .nav-item .material-icons-round {
+      font-size: 24px;
+      margin-right: 20px;
+    }
+
+    .nav-label {
+      opacity: 0;
+      transition: 0.2s;
+      pointer-events: none;
+      font-weight: 500;
+    }
+
+    .sidebar:hover .nav-label {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* MAIN CONTENT */
+    .main-area {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* VIEWS */
+    .view {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      padding: 40px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+      overflow-y: auto;
+    }
+
+    .view.active {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    /* DASHBOARD HERO */
+    .hero-section {
+      margin-bottom: 40px;
+    }
+
+    .hero-title {
+      font-size: 32px;
+      font-weight: 600;
       margin-bottom: 10px;
     }
 
-    @keyframes fadeIn {
+    .hero-subtitle {
+      color: var(--text-muted);
+      font-size: 16px;
+      max-width: 600px;
+    }
+
+    /* CARDS GRID */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .tool-card {
+      background: var(--bg-panel);
+      border-radius: var(--border-radius);
+      padding: 30px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 1px solid rgba(0, 0, 0, 0.03);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tool-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-hover);
+      border-color: rgba(74, 20, 140, 0.1);
+    }
+
+    .tool-icon {
+      width: 50px;
+      height: 50px;
+      background: rgba(74, 20, 140, 0.08);
+      /* Light purple tint */
+      color: var(--primary);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .tool-icon span {
+      font-size: 28px;
+    }
+
+    .tool-card h3 {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .tool-card p {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .tool-card.coming-soon {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    .tool-card.coming-soon:hover {
+      transform: none;
+      box-shadow: none;
+    }
+
+    .badge {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #F0F0F0;
+      color: #999;
+      font-size: 10px;
+      padding: 4px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    /* CHAT INTERFACE */
+    .chat-container {
+      max-width: 800px;
+      margin: 0 auto;
+      height: 100%;
+      /* Fill view */
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-panel);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+    }
+
+    .chat-header {
+      padding: 20px 30px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .chat-title {
+      font-weight: 600;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-close {
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .btn-close:hover {
+      color: var(--primary);
+      transform: rotate(90deg);
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background: #FAFAFA;
+    }
+
+    /* Messages */
+    .msg {
+      max-width: 80%;
+      padding: 15px 20px;
+      border-radius: 18px;
+      font-size: 15px;
+      line-height: 1.5;
+      position: relative;
+      animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes popIn {
       from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: scale(0.9);
       }
 
       to {
         opacity: 1;
-        transform: translateY(0);
+        transform: scale(1);
       }
     }
 
-    .loader {
-      display: none;
-      text-align: center;
-      padding: 40px;
+    .msg.bot {
+      background: white;
+      border-bottom-left-radius: 4px;
+      align-self: flex-start;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+      border: 1px solid rgba(0, 0, 0, 0.03);
     }
 
-    .spinner {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid var(--primary);
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 20px;
+    .msg.user {
+      background: var(--primary);
+      color: white;
+      border-bottom-right-radius: 4px;
+      align-self: flex-end;
+      box-shadow: 0 4px 15px rgba(74, 20, 140, 0.2);
     }
 
-    @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-
-      100% {
-        transform: rotate(360deg);
-      }
+    /* Input Area */
+    .chat-input-area {
+      padding: 20px 30px;
+      background: white;
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
+      display: flex;
+      gap: 15px;
     }
 
-    .success-message {
-      text-align: center;
-      color: var(--success);
-      display: none;
+    .input-field {
+      flex: 1;
+      border: none;
+      background: #F4F6F9;
+      padding: 15px 20px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 15px;
+      outline: none;
+      transition: 0.2s;
     }
 
-    .btn-add {
-      background: var(--secondary);
-      width: auto;
+    .input-field:focus {
+      background: #EEF2F6;
+      box-shadow: 0 0 0 2px rgba(74, 20, 140, 0.1);
+    }
+
+    .btn-send {
+      width: 50px;
+      height: 50px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.2s;
+    }
+
+    .btn-send:hover {
+      background: var(--primary-light);
+      transform: scale(1.05);
+    }
+
+    /* Options / Chips */
+    .options-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .option-chip {
       padding: 8px 16px;
+      background: white;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      border-radius: 20px;
       font-size: 14px;
-      margin-bottom: 20px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .option-chip:hover {
+      background: var(--primary);
+      color: white;
     }
   </style>
 </head>
 
 <body>
-  <div class="container">
-    <h1>🚀 SOW Generator</h1>
 
-    <!-- STEP 1: Client Info -->
-    <div id="step1" class="step active">
-      <label>Nombre del Cliente</label>
-      <input type="text" id="clientName" placeholder="Ej: Acme Corp">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="brand-logo">K</div>
 
-      <label>Email de Contacto</label>
-      <input type="email" id="clientEmail" placeholder="contacto@acme.com">
-
-      <label>Fecha de Inicio del Proyecto</label>
-      <input type="date" id="startDate">
-
-      <label>Vendor (Proveedor)</label>
-      <select id="vendorSelect" onchange="toggleVendorInput()">
-        <option value="KIO ITS">KIO ITS</option>
-        <option value="OTRO">Otro...</option>
-      </select>
-      <input type="text" id="vendorOther" placeholder="Escribe el nombre del proveedor..."
-        style="display:none; margin-top:-15px;">
-
-      <label>SoP (Sales Opportunity)</label>
-      <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 20px;">
-        <span style="font-weight: bold; color: #555;">SoP-</span>
-        <input type="number" id="sopNumber" placeholder="Ej: 223958" style="margin-bottom: 0;">
-      </div>
-
-      <label>Quote (Cotización) <span style="font-weight:normal; color:#888;">(Opcional)</span></label>
-      <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 20px;">
-        <span style="font-weight: bold; color: #555;">Q-</span>
-        <input type="number" id="quoteNumber" placeholder="Ej: 1400" style="margin-bottom: 0;">
-      </div>
-
-      <button class="btn" onclick="goToStep2()">Siguiente ➜</button>
+    <div class="nav-item active" onclick="switchView('dashboard')">
+      <span class="material-icons-round">dashboard</span>
+      <span class="nav-label">Dashboard</span>
     </div>
-
-    <!-- STEP 2: Services -->
-    <div id="step2" class="step">
-      <h3>Selección de Servicios</h3>
-      <p style="font-size: 0.9em; color: #666; margin-top: -10px;">Agrega los servicios que necesitas.</p>
-
-      <div id="services-container">
-        <!-- Dynamic Services will appear here -->
-      </div>
-
-      <button class="btn btn-add" onclick="addServiceRow()">+ Agregar Servicio</button>
-
-      <button class="btn" onclick="submitForm()">Generar SOW ✨</button>
-      <button class="btn btn-secondary" onclick="showStep(1)">⬅ Atrás</button>
+    <div class="nav-item" onclick="switchView('chat')">
+      <span class="material-icons-round">smart_toy</span>
+      <span class="nav-label">Generator</span>
     </div>
-
-    <!-- LOADING -->
-    <div id="loading" class="loader">
-      <div class="spinner"></div>
-      <p>Generando documento, por favor espera...</p>
-    </div>
-
-    <!-- SUCCESS -->
-    <div id="success" class="success-message">
-      <h2 style="color: var(--success)">¡Listo!</h2>
-      <p>El SOW ha sido generado exitosamente.</p>
-      <a id="docLink" href="#" target="_blank" class="btn">Abrir Documento 📄</a>
-      <br><br>
-      <button class="btn btn-secondary" onclick="resetForm()">Crear otro</button>
+    <div class="nav-item">
+      <span class="material-icons-round">inventory_2</span>
+      <span class="nav-label">Inventory</span>
     </div>
   </div>
 
-  <script>
-    // Load Catalog on Init
-    var serviceCatalog = [];
+  <!-- MAIN AREA -->
+  <div class="main-area">
 
+    <!-- VIEW: DASHBOARD -->
+    <div id="view-dashboard" class="view active">
+      <div class="hero-section">
+        <div class="hero-title">Welcome, Architect.</div>
+        <div class="hero-subtitle">Select a tool to begin your cybersecurity workflow.</div>
+      </div>
+
+      <div class="tools-grid">
+        <!-- SOW CARD -->
+        <div class="tool-card" onclick="switchView('chat')">
+          <div class="tool-icon"><span class="material-icons-round">description</span></div>
+          <h3>SOW Generator</h3>
+          <p>Create professional Statements of Work using the AI-powered pricing and content engine.</p>
+        </div>
+
+        <!-- PRICING CARD (Future) -->
+        <div class="tool-card coming-soon">
+          <span class="badge">PRO</span>
+          <div class="tool-icon"><span class="material-icons-round">monetization_on</span></div>
+          <h3>Pricing Calculator</h3>
+          <p>Validate margins and service costs in real-time. Currently in beta.</p>
+        </div>
+
+        <!-- INVENTORY CARD (Future) -->
+        <div class="tool-card coming-soon">
+          <span class="badge">DEV</span>
+          <div class="tool-icon"><span class="material-icons-round">dns</span></div>
+          <h3>Asset Inventory</h3>
+          <p>Manage KIO ITS security assets definitions and availability.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW: CHAT -->
+    <div id="view-chat" class="view">
+      <div class="chat-container">
+        <div class="chat-header">
+          <div class="chat-title">
+            <span class="material-icons-round" style="color:var(--primary)">smart_toy</span>
+            SOW Assistant
+          </div>
+          <span class="material-icons-round btn-close" onclick="switchView('dashboard')">close</span>
+        </div>
+
+        <div class="chat-messages" id="chat-stream">
+          <!-- Messages go here -->
+          <div class="msg bot">Hello! I'm your SOW assistant. Ready to create a new document?</div>
+        </div>
+
+        <div class="chat-input-area">
+          <input type="text" id="user-input" class="input-field" placeholder="Type here..."
+            onkeypress="handleKey(event)">
+          <button class="btn-send" onclick="sendMessage()"><span class="material-icons-round">send</span></button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    /* --- GLOBAL STATE --- */
+    let CAT_SERVICES = []; // Cached Catalog
+    let CURRENT_SOW_DATA = { clientData: {}, services: [] };
+    let CHAT_STATE = 'IDLE'; // IDLE, ASKING_CLIENT, ASKING_EMAIL, ASKING_SOP, ASKING_SERVICES, CONFIRMING
+
+    /* --- INITIALIZATION --- */
     window.onload = function () {
-      google.script.run.withSuccessHandler(function (catalog) {
-        serviceCatalog = catalog;
-        addServiceRow(); // Add first empty row
+      console.log("App Loaded. Fetching Catalog...");
+      google.script.run.withSuccessHandler(function (data) {
+        CAT_SERVICES = data;
+        console.log("Catalog Loaded:", CAT_SERVICES.length, "services");
       }).getServiceCatalogForWeb();
     };
 
-    function showStep(n) {
-      document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
-      document.getElementById('step' + n).classList.add('active');
-    }
+    /* --- NAVIGATION LOGIC --- */
+    function switchView(viewName) {
+      document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
 
-    function toggleVendorInput() {
-      var select = document.getElementById('vendorSelect');
-      var input = document.getElementById('vendorOther');
-      if (select.value === 'OTRO') {
-        input.style.display = 'block';
-        input.focus();
-      } else {
-        input.style.display = 'none';
-        input.value = ""; // Clean
+      document.getElementById('view-' + viewName).classList.add('active');
+
+      if (viewName === 'dashboard') document.querySelectorAll('.nav-item')[0].classList.add('active');
+      if (viewName === 'chat') {
+        document.querySelectorAll('.nav-item')[1].classList.add('active');
+        if (CHAT_STATE === 'IDLE') startChatSession();
       }
     }
 
-    function goToStep2() {
-      const name = document.getElementById('clientName').value;
-      const email = document.getElementById('clientEmail').value;
-      const date = document.getElementById('startDate').value;
-      const sop = document.getElementById('sopNumber').value;
+    /* --- CHAT CONTROLLER --- */
 
-      var vendor = document.getElementById('vendorSelect').value;
-      if (vendor === 'OTRO') {
-        vendor = document.getElementById('vendorOther').value;
-      }
+    function startChatSession() {
+      document.getElementById('chat-stream').innerHTML = '';
+      CURRENT_SOW_DATA = { clientData: { vendor: "KIO ITS", startDate: new Date().toISOString().split('T')[0] }, services: [] };
 
-      if (!name || !email || !date || !sop || !vendor) {
-        alert("Por favor completa todos los campos (Cliente, Fecha, SoP, Vendor).");
-        return;
-      }
-      showStep(2);
+      addBotMessage("👋 Hello! I'm your SOW Architect.");
+      setTimeout(() => {
+        addBotMessage("Let's create a new Statement of Work. First, what is the **Client Name**?");
+        CHAT_STATE = 'ASKING_CLIENT';
+      }, 800);
     }
 
-    function addServiceRow() {
-      const container = document.getElementById('services-container');
-      const div = document.createElement('div');
-      div.className = 'service-row';
+    function handleKey(e) { if (e.key === 'Enter') sendMessage(); }
 
-      let optionsHtml = '<option value="">-- Selecciona un Servicio --</option>';
-      serviceCatalog.forEach(svc => {
-        optionsHtml += `<option value="${svc.id}">${svc.name || svc.id}</option>`;
-      });
+    function sendMessage(val) {
+      let input = document.getElementById('user-input');
+      let text = val || input.value.trim();
+      if (!text) return;
 
-      div.innerHTML = `
-          <div style="display:flex; justify-content:space-between;">
-             <label style="flex:1;">Servicio</label>
-             <span style="color: red; cursor: pointer; font-size: 0.9em;" onclick="this.parentElement.parentElement.remove()">Eliminar</span>
-          </div>
-          <select class="service-select" onchange="onServiceChange(this)">${optionsHtml}</select>
-          
-          <label>Nivel (Tier)</label>
-          <select class="tier-select" disabled>
-            <option value="">Selecciona servicio primero</option>
-          </select>
-          
-          <!-- Contenedor para parámetros dinámicos (Ej: Objetivos) -->
-          <div class="dynamic-params" style="margin-top: 15px; display: none;">
-             <!-- Objetivos (PenTest) -->
-             <div class="group-objectives" style="display:none; margin-bottom:10px;">
-                 <label>Cantidad de Objetivos (Mínimo 5):</label>
-                 <input type="number" class="param-objectives" min="5" value="5" placeholder="Mínimo 5" style="width: 100px;">
-             </div>
-             
-             <!-- Tickets (SOC) -->
-             <div class="group-tickets" style="display:none; margin-bottom:10px;">
-                 <label>Cantidad de Tickets (Mínimo 50):</label>
-                 <input type="number" class="param-tickets" min="50" value="50" placeholder="Mínimo 50" style="width: 100px;">
-             </div>
-          </div>
-        `;
-      container.appendChild(div);
+      // UI Update
+      if (!val) addUserMessage(text);
+      input.value = '';
+
+      // LOGIC
+      processInput(text);
     }
 
-    function onServiceChange(selectElement) {
-      console.log("Servicio seleccionado:", selectElement.value);
-      updateTiers(selectElement);
-      updateParams(selectElement);
-    }
+    function processInput(text) {
+      // Delay bot response for realism
+      setTimeout(() => {
 
-    function updateParams(selectElement) {
-      const serviceId = selectElement.value.trim();
-      const row = selectElement.closest('.service-row');
-      const paramsContainer = row.querySelector('.dynamic-params');
+        switch (CHAT_STATE) {
+          case 'ASKING_CLIENT':
+            CURRENT_SOW_DATA.clientData.clientName = text;
+            addBotMessage("Great. Now, what is the **Client Email**?");
+            CHAT_STATE = 'ASKING_EMAIL';
+            break;
 
-      const groupObjectives = row.querySelector('.group-objectives');
-      const groupTickets = row.querySelector('.group-tickets');
+          case 'ASKING_EMAIL':
+            CURRENT_SOW_DATA.clientData.clientEmail = text;
+            addBotMessage("Got it. Please enter the **SoP Number** (e.g., 123456).");
+            CHAT_STATE = 'ASKING_SOP';
+            break;
 
-      // Reset all
-      paramsContainer.style.display = 'none';
-      groupObjectives.style.display = 'none';
-      groupTickets.style.display = 'none';
+          case 'ASKING_SOP':
+            CURRENT_SOW_DATA.clientData.sopNumber = text;
+            addBotMessage("And the **Quote Number**?");
+            CHAT_STATE = 'ASKING_QUOTE';
+            break;
 
-      console.log("Evaluando params para ID:", serviceId); // Debug
+          case 'ASKING_QUOTE':
+            CURRENT_SOW_DATA.clientData.quoteNumber = text;
+            addBotMessage("Perfect. Now let's add services.");
+            showServiceOptions(); // Show Buttons
+            CHAT_STATE = 'SELECTING_SERVICE';
+            break;
 
-      if (serviceId === 'PenetrationTest') {
-        paramsContainer.style.display = 'block';
-        groupObjectives.style.display = 'block';
-      } else if (serviceId === 'SOC') {
-        paramsContainer.style.display = 'block';
-        groupTickets.style.display = 'block';
-      }
-    }
-
-    function updateTiers(selectElement) {
-      const serviceId = selectElement.value;
-      const row = selectElement.closest('.service-row');
-      const tierSelect = row.querySelector('.tier-select');
-
-      tierSelect.innerHTML = '<option value="">-- Cargando --</option>';
-      if (!serviceId) {
-        tierSelect.innerHTML = '<option value="">Selecciona servicio primero</option>';
-        tierSelect.disabled = true;
-        return;
-      }
-
-      const service = serviceCatalog.find(s => s.id === serviceId);
-      if (service && service.tiers && service.tiers.length > 0) {
-        let html = '<option value="">-- Selecciona Nivel --</option>';
-        service.tiers.forEach(t => html += `<option value="${t.trim()}">${t.trim()}</option>`);
-        tierSelect.innerHTML = html;
-        tierSelect.disabled = false;
-      } else {
-        tierSelect.innerHTML = '<option value="Standard">Standard</option>';
-        tierSelect.disabled = false;
-      }
-    }
-
-    function submitForm() {
-      // Collect Data
-      const clientData = {
-        clientName: document.getElementById('clientName').value,
-        clientEmail: document.getElementById('clientEmail').value,
-        startDate: document.getElementById('startDate').value,
-        sopNumber: document.getElementById('sopNumber').value,
-        quoteNumber: document.getElementById('quoteNumber').value,
-        vendor: document.getElementById('vendorSelect').value === 'OTRO' ? document.getElementById('vendorOther').value : document.getElementById('vendorSelect').value
-      };
-
-      const serviceRows = document.querySelectorAll('.service-row');
-      const selectedServices = [];
-      let validationError = null;
-
-      serviceRows.forEach(row => {
-        const svcId = row.querySelector('.service-select').value;
-        const tier = row.querySelector('.tier-select').value;
-
-        if (svcId) {
-          let params = {};
-
-          // Capturar Objetivos si es PenTest
-          if (svcId === 'PenetrationTest') {
-            const objInput = row.querySelector('.param-objectives');
-            const val = parseInt(objInput.value);
-            if (isNaN(val) || val < 5) {
-              validationError = "El servicio Penetration Test requiere un mínimo de 5 objetivos.";
-            }
-            params.objectives = val;
-          }
-
-          // Capturar Tickets si es SOC
-          if (svcId === 'SOC') {
-            const ticketInput = row.querySelector('.param-tickets');
-            const val = parseInt(ticketInput.value);
-            if (isNaN(val) || val < 50) {
-              validationError = "El servicio SOC requiere un mínimo de 50 tickets.";
-            }
-            params.tickets = val;
-          }
-
-          selectedServices.push({ id: svcId, tier: tier, parameters: params });
+          case 'SELECTING_PARAMS':
+            // handled by custom UI mostly, but if text input
+            break;
         }
+
+      }, 600);
+    }
+
+    /* --- DYNAMIC UI HELPERS --- */
+
+    function showServiceOptions() {
+      let html = "<div>Select a service to add:</div><div class='options-container'>";
+      CAT_SERVICES.forEach(svc => {
+        html += `<div class='option-chip' onclick='selectService("${svc.id}")'>${svc.name}</div>`;
+      });
+      html += `<div class='option-chip' style='border-color: #333; color: #333' onclick='finishSelection()'>✅ Done / Generate</div>`;
+      html += "</div>";
+      addBotHtml(html);
+    }
+
+    function selectService(svcId) {
+      let svc = CAT_SERVICES.find(s => s.id === svcId);
+      if (!svc) return;
+
+      addUserMessage("Selected: " + svc.name);
+
+      // Simplified: Assume 1st Tier or Ask Tier
+      // For MVP conversational: Just add default params or ask
+      // Let's ask for Tier if available
+
+      // TEMP: Add direct
+      CURRENT_SOW_DATA.services.push({
+        id: svc.id,
+        tier: "Standard", // Hardcoded for simplified chat flow MVP
+        parameters: {}
       });
 
-      if (validationError) {
-        alert(validationError);
+      addBotMessage(`Added **${svc.name}**. Add another or click Done.`);
+      // Re-show options
+      // setTimeout(showServiceOptions, 500);
+    }
+
+    function finishSelection() {
+      if (CURRENT_SOW_DATA.services.length === 0) {
+        addBotMessage("⚠️ You must add at least one service.");
         return;
       }
+      addUserMessage("Generate SOW");
+      addBotMessage("Generating Document... 🚀");
 
-      if (selectedServices.length === 0) {
-        alert("Selecciona al menos un servicio.");
-        return;
-      }
-
-      // Show Loading
-      document.getElementById('step2').classList.remove('active');
-      document.getElementById('loading').style.display = 'block';
-
+      // CALL SERVER
       google.script.run
         .withSuccessHandler(onSuccess)
         .withFailureHandler(onFailure)
-        .processWebRequest(clientData, selectedServices);
+        .processWebRequest(CURRENT_SOW_DATA.clientData, CURRENT_SOW_DATA.services);
     }
 
     function onSuccess(result) {
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('success').style.display = 'block';
-      document.getElementById('docLink').href = result.url;
+      addBotMessage(`✅ **Success!** <br><a href="${result.url}" target="_blank" style="color:var(--primary); font-weight:bold;">Click here to open SOW (v${result.version})</a>`);
+      triggerConfetti();
     }
 
-    function onFailure(error) {
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('step2').classList.add('active');
-      alert("Error: " + error.message);
+    function onFailure(err) {
+      addBotMessage("❌ Error: " + err.message);
     }
 
-    function resetForm() {
-      // 1. Clear Client Data
-      document.getElementById('clientName').value = "";
-      document.getElementById('clientEmail').value = "";
-      document.getElementById('startDate').value = "";
-      document.getElementById('sopNumber').value = "";
-      document.getElementById('quoteNumber').value = "";
-      document.getElementById('vendorSelect').value = "KIO ITS";
-      toggleVendorInput();
-
-      // 2. Clear Services
-      document.getElementById('services-container').innerHTML = "";
-      addServiceRow(); // Add one clean row
-
-      // 3. Toggle Views
-      document.getElementById('success').style.display = 'none';
-      document.getElementById('loading').style.display = 'none';
-
-      // 4. Return to Step 1
-      showStep(1);
+    /* --- RENDERERS --- */
+    function addBotMessage(text) {
+      let stream = document.getElementById('chat-stream');
+      let div = document.createElement('div');
+      div.className = 'msg bot';
+      div.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>'); // Markdown bold support
+      stream.appendChild(div);
+      stream.scrollTop = stream.scrollHeight;
     }
+    function addBotHtml(html) {
+      let stream = document.getElementById('chat-stream');
+      let div = document.createElement('div');
+      div.className = 'msg bot';
+      div.innerHTML = html;
+      stream.appendChild(div);
+      stream.scrollTop = stream.scrollHeight;
+    }
+    function addUserMessage(text) {
+      let stream = document.getElementById('chat-stream');
+      let div = document.createElement('div');
+      div.className = 'msg user';
+      div.innerText = text;
+      stream.appendChild(div);
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    function triggerConfetti() {
+      // Simple confetti if library was added, or visual cue
+      // Since we didn't add the lib in head yet (forgot in Phase 1), skipping or just logging
+      console.log("Confetti time!");
+    }
+
   </script>
 </body>
 
 </html>
-```
