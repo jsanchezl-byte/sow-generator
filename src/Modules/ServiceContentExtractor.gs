@@ -32,8 +32,19 @@ var ServiceContentExtractor = (function() {
   }
 
   /**
+   * Helper to normalize filenames for fuzzy matching.
+   * "SOC_Gold" -> "SOCGOLD"
+   * "PenetrationTest Silver" -> "PENETRATIONTESTSILVER"
+   */
+  function _normalizeKey(str) {
+      if (!str) return "";
+      return str.toString()
+                .toUpperCase()
+                .replace(/[^A-Z0-9]/g, ""); // Remove ALL non-alphanumeric (spaces, _, -)
+  }
+
+  /**
    * Indexes the Servicios Folder ONCE per execution.
-   * Maps "Filename" -> "FileID".
    */
   function _buildFileIndex(folderId) {
       if (_fileIndex) return; // Already indexed
@@ -47,11 +58,14 @@ var ServiceContentExtractor = (function() {
           
           while (files.hasNext()) {
               var file = files.next();
-              // Store by Name (Normalized Upper) -> ID
-              // Example: "PENETRATION_TEST_GOLD" -> "12345..."
-              // We strip extension for easier matching
-              var name = file.getName().toUpperCase().replace(/\.[^/.]+$/, "");
-              index[name] = file.getId();
+              // Store by Ultra-Normalized Name
+              var rawName = file.getName();
+              var cleanName = _normalizeKey(rawName);
+              
+              // Only index Google Docs to avoid junk
+              if (file.getMimeType() === MimeType.GOOGLE_DOCS) {
+                   index[cleanName] = file.getId();
+              }
           }
       } catch (e) {
           console.warn("Drive Indexing Failed: " + e.message);
@@ -63,8 +77,8 @@ var ServiceContentExtractor = (function() {
   }
 
   /**
-   * Retrieves specific service description document based on ID/Tier convention.
-   * Uses O(1) Index Lookup instead of iterative search.
+   * Retrieves specific service description.
+   * Uses Fuzzy O(1) Lookup.
    */
   function getServiceDescription(serviceId, tier, servicesFolderId) {
      if (!servicesFolderId) return "";
@@ -72,26 +86,23 @@ var ServiceContentExtractor = (function() {
      // 1. Ensure Index exists
      _buildFileIndex(servicesFolderId);
      
-     // 2. Compute Target Name
-     // Convention: "SERVICEID_TIER" or just "SERVICEID"
-     var targetName = serviceId.toUpperCase();
-     if (tier && tier !== "" && tier !== "Standard") {
-         targetName += "_" + tier.toUpperCase();
-     }
+     // 2. Compute Target Keys (Try precise tier first, then generic)
+     var targetKeyWithTier = _normalizeKey(serviceId + tier);
+     var targetKeyGeneric = _normalizeKey(serviceId);
      
      // 3. Look up
-     var docId = _fileIndex[targetName];
+     var docId = _fileIndex[targetKeyWithTier];
      
-     // Fallback: If Tier specific not found, try generic ServiceID
      if (!docId && tier) {
-         docId = _fileIndex[serviceId.toUpperCase()];
+         // Fallback to generic if tier-specific file doesn't exist
+         docId = _fileIndex[targetKeyGeneric];
      }
      
      if (docId) {
          return extractTextFromGoogleDoc(docId);
      }
      
-     return "Descripción no encontrada para " + serviceId;
+     return "Descripción no encontrada (Check filename matches ID '" + serviceId + "')";
   }
 
   return {
