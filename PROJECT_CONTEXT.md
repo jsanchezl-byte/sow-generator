@@ -69,6 +69,84 @@ Se creó el módulo `HelpGuideGenerator.gs`.
 
 ---
 
+# Project: Cybersecurity Architecture Suite (SOW Generator)
+
+## 📌 Project Overview
+A specialized internal tool for KIO ITS to automate the generation of "Statement of Work" (SOW) documents for Cybersecurity services (SOC, Pentest, Audits).
+It features a **Web-based Conversational Interface** (Chatbot) that interviews the Service Architect, validates business rules, and generates a Google Doc based on a template.
+
+---
+
+## 🚀 Current System Status (As of Dec 2025)
+
+### 1. Architecture
+*   **Type:** Google Apps Script Web App (SPA - Single Page Application).
+*   **Entry Point:** `WebApp.gs` (serves `Index.html`).
+*   **Frontend:** `Index.html` contains the logic, CSS (KIO Purple/White Theme), and Chat Controller.
+*   **Backend:** Modularized in `src/Modules/` (ServiceCatalog, DocumentGenerator, etc.).
+*   **Config:** Centralized in `src/Config.gs`.
+
+### 2. Frontend & UX (`Index.html`)
+*   **Design:** Clean Corporate aesthetic. No Emojis (replaced with **Material Icons Round**).
+*   **Flow:**
+    1.  **Dashboard:** Welcome screen.
+    2.  **Chat Session:**
+        *   **Client Data:** Name (Req), Email (Regex), SoP (Numeric), Quote (Optional/Numeric), Contact (Optional).
+        *   **Service Selection:** Dynamic list from backend.
+        *   **Tier Selection:** If applicable (Standard, Premium, etc.).
+        *   **Parameter Config:** Iterative questions (e.g., "How many IPs?").
+    3.  **Confirmation:** Visual "Summary Card" (Receipt style) before generation.
+    4.  **Generation:** Calls backend -> Returns URL.
+    5.  **Loop:** "Create Another SOW" option to restart immediately.
+
+### 3. Business Logic & Validations
+*   **Strict Inputs:**
+    *   SoP/Quote: Numeric digits only.
+    *   Email: Strict Regex format.
+*   **Service Rules (Hard-Coded Enforcers):**
+    *   **SOC:**
+        *   *Check:* Always asks for `tickets`.
+        *   *Validation:* Minimum **50 Tickets**.
+        *   *Cleanup:* Explicitly removes 'ips' (SOC doesn't need IPs).
+    *   **Penetration Test:**
+        *   *Check:* Always asks for `objectives`.
+        *   *Validation:* Minimum **5 Objectives**.
+        *   *Cleanup:* Removes 'ips'/'tickets' to prevent data dirtying.
+    *   **Security Audit:**
+        *   *Validation:* Minimum **20 Hours**.
+    *   **Skip Logic:** Enter key skips optional fields (Quote, Contact).
+
+### 4. Backend Capabilities
+*   **Parameter Auto-Discovery:** Scans Pricing Sheet to find params not listed in Services Sheet.
+*   **Document Generation (`DocumentGenerator.gs`):**
+    *   **Smart Naming:** `SOW - {Client} - {Services} - {Date}`.
+    *   **Placeholder Injection:**
+        *   `{{CONTACTO_PRINCIPAL}}`: Fills name or clears if empty.
+        *   `{{QUOTE}}`: Prefixes "Q-" or clears if empty.
+    *   **Dynamic Tables:** Injects "Services Scope" and "Pricing" tables into the Doc.
+
+### 5. Repository & Sync
+*   **GitHub:** Synced via CLASP.
+*   **Branch:** `main` (Production-ready).
+
+---
+
+## 📋 Recent Changelog
+*   **Feature:** Added `ASKING_CONTACT` step (Primary Contact Name).
+*   **UX:** Replaced all Emojis with Material Design Icons for professional look.
+*   **Fix:** Restored `selectService` functions after accidental deletion.
+*   **Fix:** Strict numeric validation for SoP and Quote.
+*   **Logic:** Implemented "Hard-Coded Fallback" to guarantee SOC/Pentest parameter questions appear regardless of Excel metadata.
+
+---
+
+## 🔮 Roadmap / Next Steps
+*   [ ] **PDF Export:** Option to generate PDF directly.
+*   [ ] **Email Delivery:** Automatically email the SOW to the user.
+*   [ ] **Advanced Error Handling:** Retry logic for Google API timeouts.
+
+---
+
 ## 5. Instrucciones para Retomar el Proyecto
 Si regresas a este proyecto en el futuro, sigue estos pasos:
 
