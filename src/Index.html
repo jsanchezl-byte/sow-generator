@@ -433,119 +433,59 @@
 </head>
 
 <body>
-
-  <!-- SIDEBAR -->
+  <!-- SIDEBAR RESTORED -->
   <div class="sidebar">
-    <div class="brand-logo">K</div>
-
+    <div class="brand-logo" onclick="switchView('dashboard')">K</div>
     <div class="nav-item active" onclick="switchView('dashboard')">
       <span class="material-icons-round">dashboard</span>
-      <span class="nav-label">Dashboard</span>
+      <span class="nav-label">Inicio</span>
     </div>
     <div class="nav-item" onclick="switchView('chat')">
       <span class="material-icons-round">smart_toy</span>
-      <span class="nav-label">Generator</span>
-    </div>
-    <div class="nav-item">
-      <span class="material-icons-round">inventory_2</span>
-      <span class="nav-label">Inventory</span>
+      <span class="nav-label">Generador</span>
     </div>
   </div>
 
-  <!-- MAIN AREA -->
   <div class="main-area">
 
     <!-- VIEW: DASHBOARD -->
     <div id="view-dashboard" class="view active">
       <div class="hero-section">
-        <div class="hero-title">Welcome, Architect.</div>
-        <div class="hero-subtitle">Select a tool to begin your cybersecurity workflow.</div>
+        <div class="hero-title">Panel de Control</div>
+        <div class="hero-subtitle">Asistente de Ciberseguridad KIO IT Services</div>
       </div>
 
       <div class="tools-grid">
-        <!-- SOW CARD -->
         <div class="tool-card" onclick="switchView('chat')">
-          <div class="tool-icon"><span class="material-icons-round">description</span></div>
-          <h3>SOW Generator</h3>
-          <p>Create professional Statements of Work using the AI-powered pricing and content engine.</p>
+          <div class="tool-icon"><span class="material-icons-round">add_circle</span></div>
+          <h3>Generar Nuevo SOW</h3>
+          <p>Inicia el asistente conversacional para crear un documento técnico.</p>
         </div>
-
-        <!-- PRICING CARD (Future) -->
         <div class="tool-card coming-soon">
-          <span class="badge">PRO</span>
-          <div class="tool-icon"><span class="material-icons-round">monetization_on</span></div>
-          <h3>Pricing Calculator</h3>
-          <p>Validate margins and service costs in real-time. Currently in beta.</p>
+          <div class="tool-icon"><span class="material-icons-round">folder_open</span></div>
+          <h3>Historial (Próximamente)</h3>
+          <p>Accede a tus documentos generados anteriormente.</p>
         </div>
-
-        <!-- INVENTORY CARD (Future) -->
-        <div class="tool-card coming-soon">
-          <div class="brand-logo">
-            <span class="material-icons-round" style="font-size: 48px; color: var(--primary);">security</span>
-          </div>
-          <h1>Cybersecurity SOW Suite</h1>
-          <p style="color: #666; margin-bottom: 30px;">Automated Architecture & Scoping Assistant</p>
-
-
-          <!-- ANALYTICS DASHBOARD -->
-          <div id="demo-badge"
-            style="display:none; background:#ff9800; color:white; font-size:10px; padding:2px 6px; border-radius:4px; margin-bottom:10px; width:fit-content;">
-            DEMO MODE</div>
-
-          <div class="kpi-row" style="display:flex; gap:15px; margin-bottom:25px;">
-            <div class="kpi-card">
-              <span class="kpi-num" id="stat-total">0</span>
-              <span class="kpi-label">SOWs Generated</span>
-            </div>
-            <div class="kpi-card">
-              <span class="kpi-num" id="stat-hours">0h</span>
-              <span class="kpi-label">Hours Saved</span>
-            </div>
-            <div class="kpi-card">
-              <span class="kpi-num" id="stat-rate">0%</span>
-              <span class="kpi-label">Completion Rate</span>
-            </div>
-          </div>
-
-          <button class="btn-primary" onclick="switchView('chat')" style="width:100%; margin-bottom:30px;">
-            <span class="material-icons-round">play_arrow</span> Start New SOW
-          </button>
-
-          <div style="display:flex; gap:30px; align-items:flex-start;">
-            <!-- Recent Activity -->
-            <div id="recent-activity" style="flex:1; font-size: 13px; color: #888; text-align: left;">
-              <!-- Dynamic -->
-            </div>
-
-            <!-- Top Services -->
-            <div id="top-services" style="flex:1; font-size: 13px; color: #888; text-align: left;">
-              <!-- Dynamic -->
-            </div>
-          </div>
-
-        </div>
-
       </div>
     </div>
-    <!-- End of Dashboard View -->
 
     <!-- VIEW: CHAT -->
     <div id="view-chat" class="view">
       <div class="chat-container">
         <div class="chat-header">
           <div class="chat-title">
-            <span class="material-icons-round" style="color:var(--primary)">smart_toy</span>
-            SOW Assistant
+            <span class="material-icons-round btn-close" onclick="switchView('dashboard')"
+              style="margin-right:15px; cursor:pointer;">arrow_back</span>
+            Asistente Virtual
           </div>
-          <span class="material-icons-round btn-close" onclick="switchView('dashboard')">close</span>
         </div>
 
         <div class="chat-messages" id="chat-stream">
-          <div class="msg bot">Hello! I'm your SOW assistant. Ready to create a new document?</div>
+          <!-- Messages -->
         </div>
 
         <div class="chat-input-area">
-          <input type="text" id="user-input" class="input-field" placeholder="Type here..."
+          <input type="text" id="user-input" class="input-field" placeholder="Escribe aquí..."
             onkeypress="handleKey(event)">
           <button class="btn-send" onclick="sendMessage()"><span class="material-icons-round">send</span></button>
         </div>
@@ -572,66 +512,21 @@
         console.log("Catalog Loaded:", CAT_SERVICES.length, "services");
       }).getServiceCatalogForWeb();
 
-      // 2. Fetch Dashboard Analytics
-      loadDashboardStats();
+      // 2. Dashboard Stats removed
     };
-
-    function loadDashboardStats() {
-      google.script.run.withSuccessHandler((stats) => {
-        // Update KPIs
-        document.getElementById('stat-total').innerText = stats.totalSows || 0;
-        document.getElementById('stat-hours').innerText = (stats.hoursSaved || 0) + "h";
-        document.getElementById('stat-rate').innerText = stats.completionRate || "0%";
-
-        if (stats.isDemo) {
-          document.getElementById('demo-badge').style.display = 'block';
-        }
-
-        // Recent Activity
-        if (!stats.recentActivity || stats.recentActivity.length === 0) {
-          document.getElementById('recent-activity').innerHTML = "No activity yet.";
-        } else {
-          let actHtml = "<div style='font-weight:600; margin-bottom:10px; border-bottom:1px solid #ddd; padding-bottom:5px;'>Recent Activity</div>";
-          stats.recentActivity.forEach(a => {
-            let svcShort = (a.services || "").length > 25 ? (a.services || "").substring(0, 25) + "..." : (a.services || "");
-            let dateStr = new Date(a.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-            actHtml += `<div style="padding: 6px 0; border-bottom: 1px dashed #eee; display:flex; justify-content:space-between;">
-                   <div style="font-weight:500; color:#333;">${a.client}</div>
-                   <div style="font-size:11px; color:#999;">${dateStr}</div>
-               </div>
-               <div style="font-size:11px; color:#aaa; margin-bottom:4px;">${svcShort}</div>`;
-          });
-          document.getElementById('recent-activity').innerHTML = actHtml;
-        }
-
-        // Top Services (Visual Bars)
-        if (stats.topServices && stats.topServices.length > 0) {
-          let topHtml = "<div style='font-weight:600; margin-bottom:10px; border-bottom:1px solid #ddd; padding-bottom:5px;'>Top Services</div>";
-          stats.topServices.forEach(s => {
-            topHtml += `<div style="margin-bottom:12px;">
-                    <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:3px;">
-                        <span>${s.name}</span>
-                        <strong>${s.pct}%</strong>
-                    </div>
-                    <div style="height:6px; background:#eee; border-radius:3px; overflow:hidden;">
-                        <div style="height:100%; background:var(--primary); width:${s.pct}%;"></div>
-                    </div>
-                 </div>`;
-          });
-          document.getElementById('top-services').innerHTML = topHtml;
-        }
-
-      }).getDashboardStats();
-    }
 
     /* --- NAVIGATION LOGIC --- */
     function switchView(viewName) {
       document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
       document.getElementById('view-' + viewName).classList.add('active');
-      if (viewName === 'dashboard') document.querySelectorAll('.nav-item')[0].classList.add('active');
-      if (viewName === 'chat') {
-        document.querySelectorAll('.nav-item')[1].classList.add('active');
+
+      // Update sidebar active state logic
+      const navItems = document.querySelectorAll('.nav-item');
+      if (viewName === 'dashboard' && navItems[0]) navItems[0].classList.add('active');
+      if (viewName === 'chat' && navItems[1]) {
+        navItems[1].classList.add('active');
         if (CHAT_STATE === 'IDLE') startChatSession();
       }
     }
@@ -643,12 +538,14 @@
         clientData: { vendor: "KIO ITS", startDate: new Date().toISOString().split('T')[0] }, services: []
       };
 
-      // Icon: Smart Toy (Robot) - Using backticks for cleanliness
+      // Icon: Smart Toy (Robot)
       addBotMessage(`<span class='material-icons-round' style='font-size:18px; color:var(--primary); vertical-align:text-bottom;'>smart_toy</span> Hello! I'm your SOW Architect.`);
 
       setTimeout(() => {
-        addBotMessage("Let's create a new Statement of Work. First, what is the <b>Client Name</b>?");
-        CHAT_STATE = 'ASKING_CLIENT';
+        setTimeout(() => {
+          addBotMessage("Creemos un nuevo <b>Alcance de Trabajo (SOW)</b>. Primero, ¿cuál es el <b>Nombre del Cliente</b>?");
+          CHAT_STATE = 'ASKING_CLIENT';
+        }, 800);
       }, 800);
     }
 
@@ -665,7 +562,7 @@
 
       if (!val) {
         // Echo back to user (show "(Skipped)" if empty)
-        addUserMessage(text || "(Skipped)");
+        addUserMessage(text || "(Omitido)");
       }
 
       input.value = '';
@@ -677,32 +574,32 @@
         switch (CHAT_STATE) {
           case 'ASKING_CLIENT':
             if (!text) {
-              addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>error_outline</span> <b>Client Name</b> cannot be empty.`);
+              addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>error_outline</span> El <b>Nombre del Cliente</b> no puede estar vacío.`);
               return;
             }
             CURRENT_SOW_DATA.clientData.clientName = text;
-            addBotMessage("Great. Now, what is the <b>Client Email</b>?");
+            addBotMessage("Excelente. ¿Cuál es el <b>Correo Electrónico del Cliente</b>?");
             CHAT_STATE = 'ASKING_EMAIL';
             break;
 
           case 'ASKING_EMAIL':
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!text || !emailRegex.test(text)) {
-              addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>error_outline</span> Please enter a valid <b>Email Address</b>.`);
+              addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>error_outline</span> Por favor ingresa un <b>Correo válido</b>.`);
               return;
             }
             CURRENT_SOW_DATA.clientData.clientEmail = text;
-            addBotMessage("Got it. Please enter the <b>SoP Number</b>.");
+            addBotMessage("Entendido. Por favor ingresa el <b>Número de SoP</b>.");
             CHAT_STATE = 'ASKING_SOP';
             break;
 
           case 'ASKING_SOP':
             if (!text || !/^\d+$/.test(text)) {
-              addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>error_outline</span> <b>SoP Number</b> must be numeric digits only.`);
+              addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>error_outline</span> El <b>SoP</b> debe contener solo números.`);
               return;
             }
             CURRENT_SOW_DATA.clientData.sopNumber = text;
-            addBotMessage("And the <b>Quote Number</b>? (Press Enter to skip)");
+            addBotMessage("¿Y el <b>Número de Cotización</b>? (Presiona Enter para omitir)");
             CHAT_STATE = 'ASKING_QUOTE';
             break;
 
@@ -711,7 +608,7 @@
             // Allow empty string to mean "skip"
             if (cleanText && cleanText.toLowerCase() !== 'skip') {
               if (!/^\d+$/.test(cleanText)) {
-                addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>error_outline</span> <b>Quote Number</b> must be numeric digits only.`);
+                addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>error_outline</span> <b>Cotización</b> debe ser numérico.`);
                 return;
               }
               CURRENT_SOW_DATA.clientData.quoteNumber = cleanText;
@@ -722,13 +619,13 @@
 
             // NEW STEP: Contact Name
             let cName = CURRENT_SOW_DATA.clientData.clientName;
-            addBotMessage(`Is there a specific <b>Contact Name</b> at ${cName}? (Optional, press Enter to skip)`);
+            addBotMessage(`¿Hay algún <b>Contacto Principal</b> específico en ${cName}? (Opcional, Enter para omitir)`);
             CHAT_STATE = 'ASKING_CONTACT';
             break;
 
           case 'ASKING_CONTACT':
             CURRENT_SOW_DATA.clientData.contactName = text.trim(); // Optional, allows empty
-            addBotMessage("Perfect. Let's configure the services.");
+            addBotMessage("Perfecto. Configuremos los servicios.");
             showServiceOptions();
             CHAT_STATE = 'SELECTING_SERVICE';
             break;
@@ -738,7 +635,7 @@
             let val = parseInt(text);
 
             if (isNaN(val)) {
-              addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>error_outline</span> Invalid value for <b>${pName}</b>.`);
+              addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>error_outline</span> Valor inválido para <b>${pName}</b>.`);
               return;
             }
 
@@ -746,21 +643,21 @@
 
             if (pKey.includes('objectives') || pKey.includes('objetivo')) {
               if (val < 5) {
-                addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>warning_amber</span> The minimum number of <b>Objectives</b> is 5.`);
+                addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>warning_amber</span> El mínimo de <b>Objetivos</b> es 5.`);
                 return;
               }
             }
 
             if (pKey.includes('ticket')) {
               if (val < 50) {
-                addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>warning_amber</span> The minimum volume for SOC is <b>50 Tickets</b>.`);
+                addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>warning_amber</span> El volumen mínimo para SOC es <b>50 Tickets</b>.`);
                 return;
               }
             }
 
             if (pKey.includes('hour') || pKey.includes('hora')) {
               if (val < 20) {
-                addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>warning_amber</span> Minimum engagement is <b>20 Hours</b>.`);
+                addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>warning_amber</span> El compromiso mínimo es <b>20 Horas</b>.`);
                 return;
               }
             }
@@ -775,12 +672,12 @@
 
     /* --- SERVICE CONFIGURATION LOGIC --- */
     function showServiceOptions() {
-      let html = "<div>Select a service to add:</div><div class='options-container'>";
+      let html = "<div>Selecciona un servicio para agregar:</div><div class='options-container'>";
       CAT_SERVICES.forEach(svc => {
         html += `<div class='option-chip' onclick='selectService("${svc.id}")'>${svc.name}</div>`;
       });
       if (CURRENT_SOW_DATA.services.length > 0) {
-        html += `<div class='option-chip' style='border-color: #333; color: #333' onclick='finishSelection()'><span class='material-icons-round' style='font-size:16px; vertical-align:middle;'>check</span> Done / Generate</div>`;
+        html += `<div class='option-chip' style='border-color: #333; color: #333' onclick='finishSelection()'><span class='material-icons-round' style='font-size:16px; vertical-align:middle;'>check</span> Listo / Generar</div>`;
       }
       html += "</div>";
       addBotHtml(html);
@@ -790,14 +687,14 @@
       let svc = CAT_SERVICES.find(s => s.id === svcId);
       if (!svc) return;
 
-      addUserMessage("Selected: " + svc.name);
+      addUserMessage("Seleccionado: " + svc.name);
 
       // Reset Buffer
       CONFIG_BUFFER = { service: svc, tier: "", params: {}, pendingParams: [] };
 
       // 1. Tiers
       if (svc.hasTiers && svc.tiers.length > 0) {
-        addBotMessage(`Please select the **Tier** for ${svc.name}:`);
+        addBotMessage(`Por favor selecciona el <b>Nivel (Tier)</b> para ${svc.name}:`);
         let html = "<div class='options-container'>";
         svc.tiers.forEach(t => {
           html += `<div class='option-chip' onclick='selectTier("${t.trim()}")'>${t.trim()}</div>`;
@@ -852,7 +749,7 @@
       if (CONFIG_BUFFER.pendingParams.length > 0) {
         let nextP = CONFIG_BUFFER.pendingParams[0];
         CHAT_STATE = 'ASKING_PARAM_VALUE';
-        addBotMessage(`Please enter quantity for **${nextP}**:`);
+        addBotMessage(`Ingresa la cantidad para **${nextP}**:`);
       } else {
         commitService();
       }
@@ -867,7 +764,7 @@
       });
       addBotMessage(`<span class='material-icons-round'
               style='font-size:16px; color:#2e7d32; vertical-align:text-bottom;'>check_circle</span> <b>${svc.name}</b>
-            added.`);
+            agregado.`);
       setTimeout(showServiceOptions, 1000);
       CHAT_STATE = 'SELECTING_SERVICE';
     }
@@ -879,13 +776,13 @@
       let html = `
             <div class="tool-card" style="cursor:default; border:1px solid var(--primary);">
               <h3 style="color:var(--primary); margin-bottom:15px;"><span class='material-icons-round'
-                  style='font-size:20px; vertical-align:text-bottom;'>receipt_long</span> Configuration Summary</h3>
+                  style='font-size:20px; vertical-align:text-bottom;'>receipt_long</span> Resumen de Configuración</h3>
 
               <div
                 style="font-size:14px; color:#666; margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid #eee;">
-                <strong>Client:</strong> ${sData.clientData.clientName}<br>
-                <strong>Email:</strong> ${sData.clientData.clientEmail}<br>
-                <strong>SoP:</strong> ${sData.clientData.sopNumber} | <strong>Quote:</strong>
+                <strong>Cliente:</strong> ${sData.clientData.clientName}<br>
+                <strong>Correo:</strong> ${sData.clientData.clientEmail}<br>
+                <strong>SoP:</strong> ${sData.clientData.sopNumber} | <strong>Cotización:</strong>
                 ${sData.clientData.quoteNumber
         || "N/A"}
               </div>
@@ -897,19 +794,18 @@
                 <div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:8px;">
                   <div style="font-weight:600; font-size:15px;">${s.id} <span
                       style="font-weight:400; font-size:13px; color:var(--primary);">(${s.tier})</span></div>
-                  <div style="font-size:13px; color:#555;">${paramsTxt || "Standard config"}</div>
+                  <div style="font-size:13px; color:#555;">${paramsTxt || "Configuración estándar"}</div>
                 </div>`;
         }).join('')}
               </div>
 
               <div class="options-container" style="justify-content:flex-end;">
                 <div class='option-chip' style='border-color: #d32f2f; color: #d32f2f' onclick='startChatSession()'>
-                  <span class='material-icons-round' style='font-size:16px; vertical-align:middle;'>close</span> Cancel
+                  <span class='material-icons-round' style='font-size:16px; vertical-align:middle;'>close</span> Cancelar
                 </div>
                 <div class='option-chip' style='background: var(--primary); color: white;'
                   onclick='confirmGeneration()'><span class='material-icons-round'
-                    style='font-size:16px; vertical-align:middle;'>rocket_launch</span> Confirm &
-                  Generate</div>
+                    style='font-size:16px; vertical-align:middle;'>rocket_launch</span> Confirmar y Generar</div>
               </div>
             </div>
             `;
@@ -918,21 +814,21 @@
     }
 
     function confirmGeneration() {
-      addUserMessage("Confirmed. Generating now.");
-      addBotMessage(`Generating Document... <span class='material-icons-round rotating'
+      addUserMessage("Confirmado. Generando ahora...");
+      addBotMessage(`Generando Documento... <span class='material-icons-round rotating'
               style='font-size:16px; vertical-align:middle;'>settings</span>`);
       google.script.run.withSuccessHandler(onSuccess).withFailureHandler(onFailure)
         .processWebRequest(CURRENT_SOW_DATA.clientData, CURRENT_SOW_DATA.services);
     }
 
     function onSuccess(result) {
-      addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#2e7d32; vertical-align:text-bottom;'>check_circle</span> <b>Success!</b> <br><a href="${result.url}" target="_blank" style="color:var(--primary); font-weight:bold;">Open SOW (v${result.version})</a>`);
+      addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#2e7d32; vertical-align:text-bottom;'>check_circle</span> <b>¡Éxito!</b> <br><a href="${result.url}" target="_blank" style="color:var(--primary); font-weight:bold;">Abrir SOW (v${result.version})</a>`);
       triggerConfetti();
 
       setTimeout(() => {
-        addBotMessage("Would you like to generate another SOW?");
+        addBotMessage("¿Te gustaría generar otro SOW?");
         let html = "<div class='options-container'>" +
-          "<div class='option-chip' onclick='startChatSession()'><span class='material-icons-round' style='font-size:16px; vertical-align:middle;'>refresh</span> Create New SOW</div>" +
+          "<div class='option-chip' onclick='startChatSession()'><span class='material-icons-round' style='font-size:16px; vertical-align:middle;'>refresh</span> Crear Nuevo SOW</div>" +
           "</div>";
         addBotHtml(html);
       }, 2000);
@@ -970,9 +866,11 @@
     }
 
     function triggerConfetti() {
-      // Simple confetti if library was added, or visual cue
-      // Since we didn't add the lib in head yet (forgot in Phase 1), skipping or just logging
-      console.log("Confetti time!");
+      if (typeof confetti === 'function') {
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      } else {
+        console.log("Confetti time! (Lib not loaded)");
+      }
     }
 
   </script>

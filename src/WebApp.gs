@@ -4,11 +4,20 @@
  */
 
 function doGet(e) {
-  // Use 'Index' because we moved the file to src/Index.html
-  return HtmlService.createTemplateFromFile('Index')
-      .evaluate()
-      .setTitle('SOW Generator')
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  try {
+    // Use 'Index' because we moved the file to src/Index.html
+    return HtmlService.createTemplateFromFile('Index')
+        .evaluate()
+        .setTitle('SOW Generator')
+        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  } catch (error) {
+    // Return error details for debugging
+    return HtmlService.createHtmlOutput(
+      '<h1>Error cargando la aplicación</h1>' +
+      '<p><strong>Error:</strong> ' + error.message + '</p>' +
+      '<p><strong>Stack:</strong> <pre>' + error.stack + '</pre></p>'
+    );
+  }
 }
 
 function getServiceCatalogForWeb() {

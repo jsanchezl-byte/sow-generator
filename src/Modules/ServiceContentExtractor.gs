@@ -50,6 +50,7 @@ var ServiceContentExtractor = (function() {
       if (_fileIndex) return; // Already indexed
       
       console.time("BuildDriveIndex");
+      console.log("📂 Indexing Services Folder: " + folderId);
       var index = {};
       
       try {
@@ -64,7 +65,10 @@ var ServiceContentExtractor = (function() {
               
               // Only index Google Docs to avoid junk
               if (file.getMimeType() === MimeType.GOOGLE_DOCS) {
+                   console.log("   found: [" + cleanName + "] -> " + rawName);
                    index[cleanName] = file.getId();
+              } else {
+                   console.log("   ignored (wrong type): " + rawName);
               }
           }
       } catch (e) {
@@ -77,37 +81,53 @@ var ServiceContentExtractor = (function() {
   }
 
   /**
-   * Retrieves specific service description.
-   * Uses Fuzzy O(1) Lookup.
+   * Locates the File ID for a given service/tier.
    */
-  function getServiceDescription(serviceId, tier, servicesFolderId) {
-     if (!servicesFolderId) return "";
+  function findServiceDocId(serviceId, tier, folderId) {
+     if (!folderId) return null;
      
      // 1. Ensure Index exists
-     _buildFileIndex(servicesFolderId);
+     _buildFileIndex(folderId);
      
-     // 2. Compute Target Keys (Try precise tier first, then generic)
-     var targetKeyWithTier = _normalizeKey(serviceId + tier);
+     // 2. Compute Target Keys
+     var targetKeyWithTier = _normalizeKey(serviceId + (tier || ""));
      var targetKeyGeneric = _normalizeKey(serviceId);
+     
+     console.log("🔎 Looking up: " + serviceId + " (" + tier + ")");
+     console.log("   Keys: [Tier=" + targetKeyWithTier + "] or [Generic=" + targetKeyGeneric + "]");
      
      // 3. Look up
      var docId = _fileIndex[targetKeyWithTier];
      
-     if (!docId && tier) {
-         // Fallback to generic if tier-specific file doesn't exist
+     if (docId) {
+         console.log("   ✅ MATCH FOUND (Tier): " + docId);
+     } else {
          docId = _fileIndex[targetKeyGeneric];
+         if (docId) {
+             console.log("   ✅ MATCH FOUND (Generic): " + docId);
+         } else {
+             console.warn("   ❌ NO MATCH FOUND in " + Object.keys(_fileIndex).length + " files.");
+         }
      }
      
+     return docId || null;
+  }
+
+  /**
+   * Retrieves specific service description as Text (Legacy).
+   */
+  function getServiceDescription(serviceId, tier, servicesFolderId) {
+     var docId = findServiceDocId(serviceId, tier, servicesFolderId);
      if (docId) {
          return extractTextFromGoogleDoc(docId);
      }
-     
      return "Descripción no encontrada (Check filename matches ID '" + serviceId + "')";
   }
 
   return {
     getServiceDescription: getServiceDescription,
-    extractTextFromGoogleDoc: extractTextFromGoogleDoc
+    extractTextFromGoogleDoc: extractTextFromGoogleDoc,
+    findServiceDocId: findServiceDocId
   };
 
 })();

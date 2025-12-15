@@ -26,5 +26,18 @@ var CONFIG = {
   rules: {
       MIN_OBJECTIVES: 5,
       MIN_TICKETS: 50
+  },
+  
+  // Architectural Styles Definition (Single Source of Truth)
+  styles: {
+      FONT_FAMILY: "Helvetica Neue",
+      FONT_FAMILY_HEADING: "Helvetica Neue", // ADDED: Was missing, caused silent crash
+      COLOR_PRIMARY: "#4A148C", 
+      COLOR_SECONDARY: "#666666",
+      COLOR_TEXT: "#000000",
+      SIZE_H1: 16,
+      SIZE_H2: 14,
+      SIZE_H3: 12,
+      SIZE_NORMAL: 11
   }
 };

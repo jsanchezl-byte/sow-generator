@@ -105,7 +105,7 @@ var DocumentGenerator = (function() {
     }
     
     try {
-        _injectServiceDetails(body, services);
+        _injectServiceDetails(body, services, config.SERVICIOS_FOLDER_ID);
     } catch (e) {
         console.warn("Fallo al inyectar Detalles de Servicios: " + e.message);
     }
@@ -116,10 +116,21 @@ var DocumentGenerator = (function() {
         console.warn("Fallo al inyectar Tabla de Precios: " + e.message);
     }
     
+    // 5. FINAL STANDARDIZATION - Apply consistent fonts to body content
+    // Note: Whitespace cleanup is DISABLED inside to prevent removeChild errors
+    try {
+        _finalizeDocument(body);
+    } catch (e) {
+        console.warn("Warning: Fallo en la estandarización final: " + e.message);
+    }
+    
     try {
         doc.saveAndClose();
+        console.log("Document saved successfully.");
     } catch (e) {
-        throw new Error("Fallo al guardar y cerrar el documento: " + e.message);
+        console.error("Save failed: " + e.message);
+        // Don't throw - document may still be accessible
+        console.warn("Document may still be accessible despite save error.");
     }
     
     console.log("Documento finalizado correctamente.");
@@ -250,47 +261,444 @@ var DocumentGenerator = (function() {
       }
   }
   
-  function _injectServiceDetails(body, services) {
+  /* ====================================================================================================
+   *  SEMANTIC INJECTION ENGINE (REWRITTEN - v2.0)
+   *  Features: Sequential Cursor Tracking, Robust Element Factory, Polymorphic Dispatcher.
+   * ==================================================================================================== */
+
+  /**
+   * Orchestrates the injection of service details.
+   * Maintains a strict 'currentIndex' cursor to ensure elements are inserted IN ORDER.
+   */
+  /* ====================================================================================================
+  /* ====================================================================================================
+  /* ====================================================================================================
+   *  SEMANTIC INJECTION ENGINE (V4 - "HYBRID & TRANSPARENT")
+   *  
+   *  Strategy:
+   *  1. "Try High Fidelity": Attempt native element.copy(). Preserves everything.
+   *  2. "Bitrot Fallback": If copy() crashes (common in GAS), fall back to Manual Reconstruction.
+   *  3. "In-Doc Diagnostics": Write errors/tracing DIRECTLY to the SOW so the user sees them.
+   * ==================================================================================================== */
+
+  function _injectServiceDetails(body, services, servicesFolderId) {
+      console.log(">>> STARTING INJECTION V4 (HYBRID) <<<");
+      console.log("    Services count: " + (services ? services.length : "null"));
+      console.log("    Services Folder ID: " + servicesFolderId);
+      
+      if (!services || services.length === 0) {
+          console.warn("⚠️ NO SERVICES TO INJECT");
+          body.appendParagraph("⚠️ [Sistema] No hay servicios para inyectar.");
+          return;
+      }
+      
       var placeholder = "{{DETALLE_SERVICIOS}}";
       var element = body.findText(placeholder);
-      
-      if (!element) return;
-      
-      var textElement = element.getElement();
-      var paragraph = textElement.getParent();
-      
-      var container = paragraph.getParent(); 
-      var index = container.getChildIndex(paragraph);
-      
-      // Remove placeholder paragraph
-      container.removeChild(paragraph);
-      
-      // Iterate services and append content
-      services.forEach(function(svc) {
-          // NO DEDUPLICATION HERE: We want distinct sections for distinct Tiers
+      var currentIndex = 0;
+
+      if (!element) {
+          console.warn("⚠️ Placeholder " + placeholder + " NOT FOUND.");
+          body.appendParagraph("⚠️ ERROR: Placeholder " + placeholder + " no encontrado en el Template.");
+          currentIndex = body.getNumChildren(); 
+      } else {
+          console.log("✅ Placeholder found!");
+          var textElement = element.getElement();
+          var parentP = textElement.getParent();
+          currentIndex = body.getChildIndex(parentP);
+          console.log("📍 Placeholder at index: " + currentIndex);
           
-          // 1. Title: "Service Name - Tier"
-          var titleText = (svc.serviceName || svc.serviceId) + (svc.tier ? " - " + svc.tier : "");
-          
-          var title = body.insertParagraph(index, titleText);
-          title.setHeading(DocumentApp.ParagraphHeading.HEADING3);
-          title.setFontFamily("Helvetica Neue"); 
-          index++;
-          
-          // 2. Description Text
-          var descText = svc.description || "Sin descripción disponible.";
-          var p = body.insertParagraph(index, descText);
-          p.setHeading(DocumentApp.ParagraphHeading.NORMAL);
-          p.setFontFamily("Helvetica Neue");
-          p.setFontSize(11);
-          index++;
-          
-          // 3. Spacing
-          body.insertParagraph(index, "");
-          index++;
+          // FIX: Don't remove the placeholder paragraph - Google Apps Script throws
+          // "Can't remove the last paragraph in a document section" if it's the last one.
+          // Instead, clear its text and we'll overwrite it with the first service title.
+          try {
+              // First, try to insert an empty paragraph AFTER the placeholder
+              // This ensures the placeholder is no longer the "last" paragraph
+              body.insertParagraph(currentIndex + 1, "");
+              // Now we can safely remove the placeholder
+              body.removeChild(parentP);
+              console.log("   Placeholder removed safely (inserted buffer paragraph first)");
+          } catch (e) {
+              // If removal still fails, just clear the placeholder text and reuse the paragraph
+              console.warn("   Could not remove placeholder, clearing text instead: " + e.message);
+              parentP.clear();
+              currentIndex++; // Move past the cleared paragraph
+          }
+      }
+
+      services.forEach(function(svc, idx) {
+          console.log("--- Processing Service #" + (idx+1) + ": " + JSON.stringify(svc));
+          try {
+              // 1. Title
+              console.log("   Creating title paragraph...");
+              var titleP = _safeCreateParagraph(body, currentIndex);
+              var titleText = svc.serviceName || svc.serviceId || svc.id || "Servicio Sin Nombre";
+              console.log("   Title text: " + titleText);
+              titleP.setText(titleText);
+              titleP.setHeading(DocumentApp.ParagraphHeading.HEADING2);
+              titleP.setFontFamily(CONFIG.styles.FONT_FAMILY_HEADING).setFontSize(14).setBold(true).setForegroundColor(CONFIG.styles.COLOR_PRIMARY);
+              currentIndex++; 
+              console.log("   ✅ Title created at index " + (currentIndex-1));
+
+              var serviceId = svc.serviceId || svc.id;
+              console.log("   ServiceId for lookup: " + serviceId + ", Tier: " + svc.tier);
+              
+              // 2. Locate Doc
+              var sourceId = ServiceContentExtractor.findServiceDocId(serviceId, svc.tier, servicesFolderId);
+              console.log("   Source Doc ID: " + (sourceId || "NOT FOUND"));
+              
+              if (!sourceId) {
+                  // DIAGNOSTIC IN SOW
+                  console.warn("   ⚠️ Source not found, using fallback");
+                  var pWarn = _safeCreateParagraph(body, currentIndex);
+                  pWarn.setText("⚠️ [Sistema] No se encontró el documento plantilla para: " + serviceId);
+                  pWarn.setForegroundColor("#E06666").setItalic(true);
+                  currentIndex++;
+                  
+                  // Description fallback
+                  var pDesc = _safeCreateParagraph(body, currentIndex);
+                  pDesc.setText(svc.description || "Descripción no disponible.");
+                  currentIndex++;
+                  return;
+              }
+
+              // 3. Open Doc
+              console.log("   Opening source document...");
+              var sourceDoc = DocumentApp.openById(sourceId);
+              var sourceBody = sourceDoc.getBody();
+              var numChildren = sourceBody.getNumChildren();
+              console.log("   Source doc has " + numChildren + " children");
+
+              if (numChildren === 0) {
+                   var pEmpty = _safeCreateParagraph(body, currentIndex);
+                   pEmpty.setText("⚠️ [Sistema] El documento plantilla (" + sourceDoc.getName() + ") está vacío.");
+                   pEmpty.setForegroundColor("#E06666");
+                   currentIndex++;
+                   return;
+              }
+
+              console.log("   Injecting " + numChildren + " elements from " + sourceDoc.getName());
+              
+              // 4. Inject Children
+              for (var i = 0; i < numChildren; i++) {
+                  var sourceChild = sourceBody.getChild(i);
+                  var childType = sourceChild.getType().toString();
+                  console.log("      Element " + i + ": " + childType);
+                  // Dispatcher
+                  var elementsAdded = _processSourceElementHybrid(body, currentIndex, sourceChild);
+                  currentIndex += elementsAdded;
+                  console.log("      -> Added " + elementsAdded + " elements, new index: " + currentIndex);
+              }
+              
+              console.log("   ✅ Service injection complete!");
+              
+          } catch (e) {
+              console.error("   ⛔ ERROR: " + e.message + " | Stack: " + e.stack);
+              var pErr = _safeCreateParagraph(body, currentIndex);
+              pErr.setText("⛔ [Error Inyección]: " + e.message);
+              pErr.setForegroundColor("#FF0000").setBold(true);
+              currentIndex++;
+          }
+
+          // REMOVED: Spacer paragraph was causing "Cannot insert an empty text element" error
+          // The injected content already has proper spacing from the source document
       });
+      
+      console.log(">>> INJECTION V4 COMPLETE <<<");
   }
 
+  /**
+   * Hybrid Dispatcher
+   */
+  function _processSourceElementHybrid(body, index, sourceElement) {
+      var type = sourceElement.getType();
+      
+      if (type === DocumentApp.ElementType.PARAGRAPH) {
+          return _injectHybridParagraph(body, index, sourceElement.asParagraph());
+      } else if (type === DocumentApp.ElementType.LIST_ITEM) {
+          return _injectHybridListItem(body, index, sourceElement.asListItem());
+      } else if (type === DocumentApp.ElementType.TABLE) {
+          return _injectTable(body, index, sourceElement.asTable());
+      }
+      return 0;
+  }
+
+  /**
+   * ENHANCED PARAGRAPH INJECTOR WITH SAFE IMAGE SUPPORT
+   * Extracts text and images separately to avoid copy() corruption.
+   * Images are inserted with try/catch to ensure stability.
+   */
+  function _injectHybridParagraph(body, index, sourceP) {
+      try {
+          var numChildren = sourceP.getNumChildren();
+          var hasInlineImages = false;
+          var hasPositionedImages = false;
+          
+          // Check for positioned (floating) images
+          try {
+              var posImages = sourceP.getPositionedImages();
+              if (posImages && posImages.length > 0) {
+                  hasPositionedImages = true;
+                  console.log("      📷 Found " + posImages.length + " positioned images");
+              }
+          } catch (e) {}
+          
+          // Check if paragraph has inline images
+          for (var c = 0; c < numChildren; c++) {
+              var childType = sourceP.getChild(c).getType();
+              if (childType === DocumentApp.ElementType.INLINE_IMAGE) {
+                  hasInlineImages = true;
+                  console.log("      📷 Found inline image at child " + c);
+              }
+          }
+          
+          // Simple case: text only, no images
+          if (!hasInlineImages && !hasPositionedImages) {
+              var text = sourceP.getText();
+              
+              // Skip completely empty paragraphs
+              if (!text || text.trim() === '') {
+                  body.insertParagraph(index, "");
+                  return 1;
+              }
+              
+              var newP = body.insertParagraph(index, text);
+              
+              // Copy heading style if present
+              var heading = sourceP.getHeading();
+              if (heading !== DocumentApp.ParagraphHeading.NORMAL) {
+                  newP.setHeading(heading);
+              }
+              
+              // Copy alignment
+              newP.setAlignment(sourceP.getAlignment());
+              
+              return 1;
+          }
+          
+          // Complex case: paragraph has images - use child-by-child insertion
+          var newP = body.insertParagraph(index, "");
+          newP.setHeading(sourceP.getHeading());
+          newP.setAlignment(sourceP.getAlignment());
+          
+          // Clear the default empty text
+          newP.clear();
+          
+          // Process inline content (text + inline images)
+          for (var i = 0; i < numChildren; i++) {
+              var child = sourceP.getChild(i);
+              var type = child.getType();
+              
+              if (type === DocumentApp.ElementType.TEXT) {
+                  var textContent = child.getText();
+                  if (textContent && textContent.length > 0) {
+                      try {
+                          var textEl = newP.appendText(textContent);
+                          // Try to copy text attributes (bold, italic, etc.)
+                          try {
+                              textEl.setAttributes(child.getAttributes());
+                          } catch (attrErr) {}
+                      } catch (textErr) {
+                          console.warn("Text append failed: " + textErr.message);
+                      }
+                  }
+              } else if (type === DocumentApp.ElementType.INLINE_IMAGE) {
+                  try {
+                      // Safe image extraction and insertion
+                      var blob = child.getBlob();
+                      if (blob) {
+                          var img = newP.appendInlineImage(blob);
+                          // Preserve original dimensions
+                          var origWidth = child.getWidth();
+                          var origHeight = child.getHeight();
+                          if (origWidth && origHeight) {
+                              img.setWidth(origWidth);
+                              img.setHeight(origHeight);
+                          }
+                          console.log("      ✅ Inserted inline image");
+                      }
+                  } catch (imgErr) {
+                      console.warn("Image insertion skipped: " + imgErr.message);
+                      // Insert placeholder text instead of broken image
+                      try {
+                          newP.appendText(" [Imagen] ");
+                      } catch (e) {}
+                  }
+              }
+          }
+          
+          // Handle positioned (floating) images
+          if (hasPositionedImages) {
+              try {
+                  var posImages = sourceP.getPositionedImages();
+                  for (var p = 0; p < posImages.length; p++) {
+                      try {
+                          var posImg = posImages[p];
+                          var blob = posImg.getBlob();
+                          if (blob) {
+                              // Insert as inline image (positioned images can't be recreated exactly)
+                              var img = newP.appendInlineImage(blob);
+                              img.setWidth(posImg.getWidth());
+                              img.setHeight(posImg.getHeight());
+                              console.log("      ✅ Converted positioned image to inline");
+                          }
+                      } catch (posImgErr) {
+                          console.warn("Positioned image skipped: " + posImgErr.message);
+                          newP.appendText(" [Imagen flotante] ");
+                      }
+                  }
+              } catch (e) {
+                  console.warn("Positioned images error: " + e.message);
+              }
+          }
+          
+          return 1;
+      } catch (e) {
+          console.warn("Paragraph injection failed: " + e.message);
+          // Fallback: insert text only
+          try {
+              var fallbackText = sourceP.getText() || "";
+              body.insertParagraph(index, fallbackText || "[Error de párrafo]");
+          } catch (e2) {}
+          return 1;
+      }
+  }
+
+  function _injectHybridListItem(body, index, sourceLI) {
+      try {
+          var text = sourceLI.getText();
+          
+          // Create list item with text
+          var newLI = body.insertListItem(index, text || " ");
+          
+          // Copy list properties
+          try {
+              newLI.setNestingLevel(sourceLI.getNestingLevel());
+              newLI.setGlyphType(sourceLI.getGlyphType());
+          } catch (e) {}
+          
+          return 1;
+      } catch (e) {
+          console.warn("List item injection failed: " + e.message);
+          return 0;
+      }
+  }
+
+  /**
+   * FALLBACK: Manual Reconstruction (V3.1 Logic)
+   * Used when native copy fails.
+   */
+  function _injectSemanticParagraphRecursive(body, index, sourceP) {
+      var targetP = _safeCreateParagraph(body, index);
+      targetP.setHeading(sourceP.getHeading());
+      targetP.setAlignment(sourceP.getAlignment());
+      
+      var numChildren = sourceP.getNumChildren();
+      for (var i = 0; i < numChildren; i++) {
+          var child = sourceP.getChild(i);
+          var type = child.getType();
+          
+          if (type === DocumentApp.ElementType.TEXT) {
+              var text = child.getText();
+              if (text && text.length > 0) {
+                  var t = targetP.appendText(text);
+                  t.setAttributes(child.getAttributes()); // Try copying all attributes
+              }
+          } else if (type === DocumentApp.ElementType.INLINE_IMAGE) {
+              try {
+                  var blob = child.getBlob();
+                  var img = targetP.appendInlineImage(blob);
+                  img.setWidth(child.getWidth()).setHeight(child.getHeight());
+              } catch(e){}
+          }
+      }
+      
+      // Handle Positioned Images (Floating)
+      try {
+          var posImages = sourceP.getPositionedImages();
+          if (posImages) {
+              posImages.forEach(function(pi) {
+                  try { targetP.appendInlineImage(pi.getBlob()).setWidth(pi.getWidth()).setHeight(pi.getHeight()); } catch(e){}
+              });
+          }
+      } catch(e){}
+
+      return 1;
+  }
+
+  function _injectSemanticListItemRecursive(body, index, sourceLI) {
+      var targetLI = _safeCreateListItem(body, index);
+      targetLI.setNestingLevel(sourceLI.getNestingLevel()).setGlyphType(sourceLI.getGlyphType());
+      
+      var numChildren = sourceLI.getNumChildren();
+      for (var i = 0; i < numChildren; i++) {
+          var child = sourceLI.getChild(i);
+          if (child.getType() === DocumentApp.ElementType.TEXT) {
+               var text = child.getText();
+               if (text) {
+                   var t = targetLI.appendText(text);
+                   t.setAttributes(child.getAttributes());
+               }
+          }
+      }
+      return 1;
+  }
+
+  function _injectTable(body, index, sourceTable) {
+      try {
+          var newTable = body.insertTable(index, sourceTable.copy());
+          _sanitizeTableStyles(newTable);
+          return 1;
+      } catch (e) {
+          console.warn("Table Copy Error: " + e.message);
+          return 0;
+      }
+  }
+
+  function _safeCreateParagraph(body, index) {
+      // FIXED: Don't use append-copy-remove pattern - it causes 
+      // "Can't remove the last paragraph in a document section" errors.
+      // Simply insert a paragraph directly with empty text.
+      try {
+          var p = body.insertParagraph(index, "");
+          return p;
+      } catch (e) {
+          // Fallback: if insertParagraph fails, try appendParagraph
+          console.warn("insertParagraph failed, using appendParagraph: " + e.message);
+          return body.appendParagraph("");
+      }
+  }
+
+  function _safeCreateListItem(body, index) {
+      // FIXED: Same fix as _safeCreateParagraph
+      try {
+          var li = body.insertListItem(index, "");
+          return li;
+      } catch (e) {
+          console.warn("insertListItem failed, using appendListItem: " + e.message);
+          return body.appendListItem("");
+      }
+  }
+
+  function _sanitizeTableStyles(table) {
+      try {
+        var rows = table.getNumRows();
+        for (var r=0; r<rows; r++) {
+            var row = table.getRow(r);
+            var cells = row.getNumCells();
+            for (var c=0; c<cells; c++) {
+                var cell = row.getCell(c);
+                var numChildren = cell.getNumChildren();
+                for (var k=0; k<numChildren; k++) {
+                    var child = cell.getChild(k);
+                    if (child.getType() === DocumentApp.ElementType.PARAGRAPH) {
+                        child.asParagraph().setFontFamily(CONFIG.styles.FONT_FAMILY);
+                        child.asParagraph().setFontSize(CONFIG.styles.SIZE_NORMAL);
+                    }
+                }
+            }
+        }
+      } catch(e) {}
+  }
   function _injectPricingTable(body, fullPricingData) {
       var placeholder = "{{PRECIOS_TABLE}}";
       var element = body.findText(placeholder);
@@ -405,6 +813,167 @@ var DocumentGenerator = (function() {
           name: fullName,
           version: version
       };
+  }
+
+  /**
+   * Final Polish: Homogenize Fonts, Colors, and cleanup Whitespace.
+   */
+  function _finalizeDocument(body) {
+      console.log("Running Final Standardization (Protecting Cover/Index)...");
+      
+      var children = body.getNumChildren();
+      var pageBreaksFound = 0;
+      
+      // FIXED INDEX PROTECTION: The placeholder {{DETALLE_SERVICIOS}} is typically at index ~66
+      // So we protect the first 65 elements (cover + index) and style everything after.
+      // This is more reliable than counting page breaks which can be inconsistent.
+      var PROTECTED_INDEX = 65;
+      
+      console.log("Using FIXED protected zone: first " + PROTECTED_INDEX + " elements protected (cover/index).");
+
+      // A. WHITESPACE CLEANUP - DISABLED (causes removeChild errors)
+      // The whitespace cleanup was removing paragraphs which can fail when
+      // trying to remove the last paragraph in a section.
+      // Keeping styling logic only.
+      /*
+      var emptyCount = 0;
+      for (var i = children - 1; i >= startIndex; i--) {
+          var child = body.getChild(i);
+          var type = child.getType();
+          
+          if (type === DocumentApp.ElementType.PARAGRAPH) {
+              var text = child.getText();
+              if (text.trim() === "" && child.getNumChildren() === 0) {
+                  emptyCount++;
+                  if (emptyCount > 1) {
+                      body.removeChild(child);
+                  }
+              } else {
+                  emptyCount = 0;
+              }
+          } else {
+              emptyCount = 0;
+          }
+      }
+      */
+      
+      // B. STYLE HOMOGENIZATION
+      // Now using FIXED INDEX protection instead of counting page breaks
+      
+      var freshChildren = body.getNumChildren();
+      var styledParagraphs = 0;
+      var styledListItems = 0;
+      var styledTables = 0;
+      
+      console.log("_finalizeDocument: Processing " + freshChildren + " total elements");
+      
+      // Define Standard Styles (From Config)
+      var STD_FONT = CONFIG.styles.FONT_FAMILY; 
+      var STD_COLOR_H = CONFIG.styles.COLOR_PRIMARY;
+      var STD_COLOR_TEXT = CONFIG.styles.COLOR_TEXT; 
+      
+      console.log("_finalizeDocument: Using font: " + STD_FONT);
+      
+      for (var k = 0; k < freshChildren; k++) {
+          // FIXED INDEX PROTECTION: Skip first N elements (cover + index)
+          if (k < PROTECTED_INDEX) {
+              continue;
+          }
+          
+          var el = body.getChild(k);
+          var t = el.getType();
+          
+          // Skip page breaks (nothing to style)
+          if (t === DocumentApp.ElementType.PAGE_BREAK) {
+              continue;
+          }
+
+          // ... Apply Styles ...
+          if (t === DocumentApp.ElementType.PARAGRAPH) {
+              var h = el.getHeading();
+              
+              // Use editAsText() to force font on ALL text content (overrides individual runs)
+              try {
+                  var textEl = el.editAsText();
+                  textEl.setFontFamily(STD_FONT);
+                  
+                  if (h === DocumentApp.ParagraphHeading.HEADING1) {
+                       textEl.setForegroundColor(STD_COLOR_H);
+                       textEl.setFontSize(CONFIG.styles.SIZE_H1);
+                       textEl.setBold(true);
+                  } else if (h === DocumentApp.ParagraphHeading.HEADING2) {
+                       textEl.setForegroundColor(STD_COLOR_H);
+                       textEl.setFontSize(CONFIG.styles.SIZE_H2);
+                       textEl.setBold(true);
+                  } else if (h === DocumentApp.ParagraphHeading.HEADING3) {
+                       textEl.setForegroundColor(CONFIG.styles.COLOR_SECONDARY);
+                       textEl.setFontSize(CONFIG.styles.SIZE_H3);
+                       textEl.setBold(true);
+                  } else if (h === DocumentApp.ParagraphHeading.NORMAL) {
+                       textEl.setFontSize(CONFIG.styles.SIZE_NORMAL);
+                       textEl.setForegroundColor(STD_COLOR_TEXT);
+                  }
+                  styledParagraphs++;
+              } catch (e) {}
+              
+              // Apply paragraph-level formatting
+              if (h === DocumentApp.ParagraphHeading.HEADING3) {
+                   el.setSpacingBefore(12);
+                   el.setSpacingAfter(6);
+              } else if (h === DocumentApp.ParagraphHeading.NORMAL) {
+                   el.setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
+                   el.setLineSpacing(1.15);
+                   el.setSpacingBefore(0);
+                   el.setSpacingAfter(8);
+              }
+          }
+          // Handle List Items
+          else if (t === DocumentApp.ElementType.LIST_ITEM) {
+               try {
+                   var textEl = el.editAsText();
+                   textEl.setFontFamily(STD_FONT);
+                   textEl.setFontSize(CONFIG.styles.SIZE_NORMAL);
+                   textEl.setForegroundColor(STD_COLOR_TEXT);
+                   styledListItems++;
+               } catch (e) {}
+               el.setLineSpacing(1.15);
+               el.setSpacingBefore(0);
+               el.setSpacingAfter(4);
+               el.setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
+          }
+          else if (t === DocumentApp.ElementType.TABLE) {
+              // Tables need special handling - iterate through cells and their paragraphs
+              try {
+                  var rows = el.getNumRows();
+                  for (var r = 0; r < rows; r++) {
+                      var row = el.getRow(r);
+                      var cells = row.getNumCells();
+                      for (var c = 0; c < cells; c++) {
+                          var cell = row.getCell(c);
+                          // Iterate through paragraphs in the cell
+                          var cellChildren = cell.getNumChildren();
+                          for (var p = 0; p < cellChildren; p++) {
+                              var cellChild = cell.getChild(p);
+                              if (cellChild.getType() === DocumentApp.ElementType.PARAGRAPH ||
+                                  cellChild.getType() === DocumentApp.ElementType.LIST_ITEM) {
+                                  try {
+                                      var cellText = cellChild.editAsText();
+                                      cellText.setFontFamily(STD_FONT);
+                                      cellText.setFontSize(10);
+                                  } catch (e) {}
+                              }
+                          }
+                      }
+                  }
+                  styledTables++;
+              } catch (e) {
+                  console.warn("Table styling error: " + e.message);
+              }
+          }
+      }
+      
+      console.log("_finalizeDocument: Styled " + styledParagraphs + " paragraphs, " + 
+                  styledListItems + " list items, " + styledTables + " tables");
   }
 
   /**

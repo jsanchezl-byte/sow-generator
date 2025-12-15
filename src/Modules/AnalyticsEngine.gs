@@ -25,102 +25,155 @@ function getDashboardStats() {
         totalSows: 0,
         hoursSaved: 0,
         completionRate: "0%",
-        topServices: [],
+        topServices: [], 
         recentActivity: [],
-        isDemo: false
+        debug: { source: "Unknown", sheet: "None", fileId: "Unknown" }
     };
 
     try {
         var ss;
+        // 1. Try Configured ID
         if (typeof CONFIG !== 'undefined' && CONFIG.SHEET_SERVICES_ID) {
-           ss = SpreadsheetApp.openById(CONFIG.SHEET_SERVICES_ID);
-        } else {
-           ss = SpreadsheetApp.getActiveSpreadsheet(); 
+           try { ss = SpreadsheetApp.openById(CONFIG.SHEET_SERVICES_ID); } catch(e) { console.warn("Config ID failed"); }
+        }
+        // 2. Fallback to Active
+        if (!ss) ss = SpreadsheetApp.getActiveSpreadsheet();
+        
+        if (!ss) {
+            stats.debug.error = "No Spreadsheet Accessible";
+            return stats;
         }
         
-        if (!ss) return DEMO_DATA; // Return Demo Data if no spreadsheet access
+        stats.debug.fileName = ss.getName();
+        stats.debug.fileId = ss.getId();
 
-        var sheetName = (typeof CONFIG !== 'undefined' && CONFIG.sheets && CONFIG.sheets.AUDIT) ? CONFIG.sheets.AUDIT : "SOW_LOGS";
-        var sheet = ss.getSheetByName(sheetName);
+        // 3. Dynamic Sheet Discovery
+        var sheets = ss.getSheets();
+        var targetSheet = null;
+        var cols = { status: -1, client: -1, services: -1, date: -1 };
         
-        // If no sheet or empty, return DEMO DATA to impress Stakeholders
-        if (!sheet || sheet.getLastRow() < 2) {
-             stats = DEMO_DATA;
-             stats.isDemo = true;
-             return stats;
+        // Define Keywords (EN & ES)
+        var KEYS = {
+            STATUS: ['STATUS', 'ESTADO', 'ESTATUS', 'RESULT', 'RESULTADO'],
+            CLIENT: ['CLIENT', 'CLIENTE', 'CUSTOMER', 'EMPRESA', 'CLIENT NAME', 'NOMBRE CLIENTE'],
+            SERVICES: ['SERVICE', 'SERVICES', 'SERVICIO', 'SERVICIOS', 'SUMMARY', 'RESUMEN', 'SERVICES SUMMARY'],
+            DATE: ['DATE', 'FECHA', 'TIMESTAMP', 'TIME', 'HORA', 'CREATED']
+        };
+
+        // Scan all sheets
+        for (var i = 0; i < sheets.length; i++) {
+            var s = sheets[i];
+            var lastRow = s.getLastRow();
+            if (lastRow < 2) continue; // Skip empty
+
+            var headers = s.getRange(1, 1, 1, s.getLastColumn()).getValues()[0];
+            var found = { status: -1, client: -1, services: -1, date: -1 };
+            
+            // Map Headers
+            for (var c = 0; c < headers.length; c++) {
+                var h = String(headers[c]).toUpperCase().trim();
+                if (KEYS.STATUS.indexOf(h) > -1) found.status = c;
+                else if (KEYS.CLIENT.indexOf(h) > -1) found.client = c;
+                else if (KEYS.SERVICES.indexOf(h) > -1) found.services = c;
+                else if (KEYS.DATE.indexOf(h) > -1) found.date = c;
+            }
+            
+            // Criteria: Must have at least Status. Ideally Client too.
+            if (found.status > -1) {
+                targetSheet = s;
+                cols = found;
+                stats.debug.sheet = s.getName();
+                stats.debug.cols = found;
+                
+                // Prefer 'SOW_LOGS' or 'AUDIT' if multiple matches, but take first valid for now
+                var nameUp = s.getName().toUpperCase();
+                if (nameUp.includes('LOG') || nameUp.includes('AUDIT') || nameUp.includes('SOW')) {
+                    break; // Good enough match
+                }
+            }
         }
-        
-        // Real Data Processing
-        var lastRow = sheet.getLastRow();
-        var data = sheet.getRange(2, 1, lastRow - 1, 6).getValues();
+
+        if (!targetSheet) {
+            stats.debug.error = "No valid Data Sheet in '" + ss.getName() + "'. Checked: " + sheets.map(s=>s.getName()).join(', ');
+            return stats;
+        }
+
+        // 4. Extract Data using Dynamic Columns
+        var lastRow = targetSheet.getLastRow();
+        var dataRange = targetSheet.getRange(2, 1, lastRow - 1, targetSheet.getLastColumn());
+        var data = dataRange.getValues();
         
         var successCount = 0;
         var totalAttempts = 0;
         var serviceCounts = {};
 
+        // Traverse backwards
         for (var i = data.length - 1; i >= 0; i--) {
             var row = data[i];
-            var timestamp = row[0];
-            var status = row[1];
-            var client = row[3];
-            var servicesStr = row[4];
             
-            totalAttempts++;
+            // Safe extraction
+            var valStatus = (cols.status > -1) ? row[cols.status] : "";
+            var valClient = (cols.client > -1) ? row[cols.client] : "Unknown Client";
+            var valServices = (cols.services > -1) ? row[cols.services] : "";
+            var valDate = (cols.date > -1) ? row[cols.date] : new Date();
 
-            if (String(status).toUpperCase() === 'SUCCESS') {
+            totalAttempts++;
+            
+            var sUpper = String(valStatus).toUpperCase().trim();
+            // Robust Check: includes substring 'SUCCESS' or 'OK' or 'COMPLET'
+            if (sUpper.includes('SUCCESS') || sUpper === 'OK' || sUpper.includes('COMPLET') || sUpper === 'GENERATED') {
                 successCount++;
                 
                 // Recency
                 if (stats.recentActivity.length < 5) {
                     stats.recentActivity.push({
-                       client: client,
-                       services: servicesStr,
-                       date: timestamp 
+                       client: valClient,
+                       services: valServices,
+                       date: valDate 
                     });
                 }
                 
-                // Services freq
-                if (servicesStr) {
-                    var services = servicesStr.split(/,\s*/);
-                    services.forEach(function(s) {
-                        var cleanName = s.split('(')[0].trim(); // Group by base service
-                        if(!serviceCounts[cleanName]) serviceCounts[cleanName] = 0;
-                        serviceCounts[cleanName]++;
+                // Services
+                if (valServices) {
+                    var servicesList = String(valServices).split(/,\s*/);
+                    servicesList.forEach(function(svc) {
+                        var clean = svc.split('(')[0].trim();
+                        if (clean.length > 2) { // Filter noise
+                            if(!serviceCounts[clean]) serviceCounts[clean] = 0;
+                            serviceCounts[clean]++;
+                        }
                     });
                 }
             }
         }
         
-        // KPI Calculation
         stats.totalSows = successCount;
         stats.hoursSaved = Math.round(successCount * 1.5);
         stats.completionRate = totalAttempts > 0 ? Math.round((successCount / totalAttempts) * 100) + "%" : "0%";
         
-        // Sort & Calculate Percentages for Top Services
+        // Top Services Logic
         var sortedServices = [];
         var totalServiceMentions = 0;
         for (var name in serviceCounts) {
             sortedServices.push({name: name, count: serviceCounts[name]});
             totalServiceMentions += serviceCounts[name];
         }
+        
         sortedServices.sort(function(a, b) { return b.count - a.count; });
         
-        // Add Pct
         stats.topServices = sortedServices.slice(0, 3).map(function(s) {
              s.pct = totalServiceMentions > 0 ? Math.round((s.count / totalServiceMentions) * 100) : 0;
              return s;
         });
 
-        // Use Demo Data if real data is zero (to avoid empty dashboard)
-        if (stats.totalSows === 0) {
-            stats = DEMO_DATA;
-            stats.isDemo = true;
-        }
+        // Debug Source Info
+        stats.dataSource = stats.debug.sheet + " in " + stats.debug.fileName;
 
         return stats;
 
     } catch (e) {
         console.error("Analytics Error: " + e.message);
-        return DEMO_DATA; // Fail safe to Demo Data
+        stats.debug.error = e.message;
+        return stats;
     }
 }
