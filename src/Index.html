@@ -444,6 +444,10 @@
       <span class="material-icons-round">smart_toy</span>
       <span class="nav-label">Generador</span>
     </div>
+    <div class="nav-item" onclick="switchView('newservice')">
+      <span class="material-icons-round">add_circle</span>
+      <span class="nav-label">Nuevo Servicio</span>
+    </div>
   </div>
 
   <div class="main-area">
@@ -452,7 +456,7 @@
     <div id="view-dashboard" class="view active">
       <div class="hero-section">
         <div class="hero-title">Panel de Control</div>
-        <div class="hero-subtitle">Asistente de Ciberseguridad KIO IT Services</div>
+        <div class="hero-subtitle">Asistente de Ciberseguridad KIO IT Services (Hola Mundo MVP 🚀)</div>
       </div>
 
       <div class="tools-grid">
@@ -492,6 +496,110 @@
       </div>
     </div>
 
+    <!-- VIEW: NEW SERVICE FORM -->
+    <div id="view-newservice" class="view">
+      <div class="chat-container" style="max-width:600px; margin:0 auto;">
+        <div class="chat-header">
+          <div class="chat-title">
+            <span class="material-icons-round btn-close" onclick="switchView('dashboard')"
+              style="margin-right:15px; cursor:pointer;">arrow_back</span>
+            Nuevo Servicio
+          </div>
+        </div>
+
+        <div style="padding:30px; overflow-y:auto; height:calc(100vh - 80px);">
+          <form id="new-service-form" onsubmit="submitNewService(event)">
+            <div style="margin-bottom:20px;">
+              <label style="display:block; font-weight:600; margin-bottom:8px;">ID del Servicio *</label>
+              <input type="text" id="svc-id" required placeholder="Ej: SOC, PENETRATION_TEST"
+                style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; font-size:14px;">
+              <small style="color:#888;">Se convertirá a mayúsculas automáticamente</small>
+            </div>
+
+            <div style="margin-bottom:20px;">
+              <label style="display:block; font-weight:600; margin-bottom:8px;">Nombre para Mostrar *</label>
+              <input type="text" id="svc-name" required placeholder="Ej: Security Operations Center"
+                style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; font-size:14px;">
+            </div>
+
+            <div style="margin-bottom:20px;">
+              <label style="display:block; font-weight:600; margin-bottom:8px;">Categoría</label>
+              <select id="svc-category" onchange="handleCategoryChange()"
+                style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; font-size:14px; background:white;">
+                <option value="">-- Seleccionar --</option>
+                <!-- Categories will be populated dynamically -->
+              </select>
+              <div id="new-category-container" style="margin-top:10px; display:none;">
+                <input type="text" id="svc-new-category" placeholder="Nueva categoría..."
+                  style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; font-size:14px;">
+              </div>
+            </div>
+
+            <div style="margin-bottom:20px;">
+              <label style="display:block; font-weight:600; margin-bottom:8px;">¿Tiene Tiers?</label>
+              <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer;">
+                <input type="checkbox" id="svc-hasTiers" onchange="toggleTiersInput()">
+                <span>Sí, tiene niveles (Silver, Gold, Platinum, etc.)</span>
+              </label>
+            </div>
+
+            <div id="tiers-container"
+              style="margin-bottom:20px; display:none; padding:15px; background:#f8f9fa; border-radius:8px; border:1px solid #e9ecef;">
+              <label style="display:block; font-weight:600; margin-bottom:12px;">
+                <span class="material-icons-round" style="font-size:18px; vertical-align:text-bottom;">layers</span>
+                Tiers del Servicio
+              </label>
+              <small style="color:#666; display:block; margin-bottom:15px;">
+                Agrega los niveles uno por uno (ej: Silver, Gold, Platinum)
+              </small>
+
+              <div id="tiers-list">
+                <!-- Dynamic tier rows will be added here -->
+              </div>
+
+              <button type="button" onclick="addTierRow()"
+                style="padding:10px 15px; background:#4A148C; color:white; border:none; border-radius:6px; font-size:13px; cursor:pointer; display:flex; align-items:center; gap:5px;">
+                <span class="material-icons-round" style="font-size:16px;">add</span>
+                Agregar Tier
+              </button>
+            </div>
+
+
+            <!-- UNITS OF MEASURE SECTION -->
+            <div
+              style="margin-bottom:20px; padding:15px; background:#f8f9fa; border-radius:8px; border:1px solid #e9ecef;">
+              <label style="display:block; font-weight:600; margin-bottom:12px;">
+                <span class="material-icons-round" style="font-size:18px; vertical-align:text-bottom;">straighten</span>
+                Unidades de Medida
+              </label>
+              <small style="color:#666; display:block; margin-bottom:15px;">
+                Define las unidades que se preguntarán al cliente (ej: "Objetivos", "Procesos", "Personas")
+              </small>
+
+              <div id="units-list">
+                <!-- Dynamic unit rows will be added here -->
+              </div>
+
+              <button type="button" onclick="addUnitRow()"
+                style="padding:10px 15px; background:#4A148C; color:white; border:none; border-radius:6px; font-size:13px; cursor:pointer; display:flex; align-items:center; gap:5px;">
+                <span class="material-icons-round" style="font-size:16px;">add</span>
+                Agregar Unidad
+              </button>
+            </div>
+
+            <div id="form-message" style="padding:12px; border-radius:8px; margin-bottom:20px; display:none;"></div>
+
+            <div style="margin-top:30px; text-align:center;">
+              <button type="submit" id="submit-btn"
+                style="width:100%; padding:15px; background:linear-gradient(135deg, #4A148C, #7C43BD); color:white; border:none; border-radius:8px; font-size:16px; font-weight:600; cursor:pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                Agregar Servicio
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -510,6 +618,7 @@
       google.script.run.withSuccessHandler(function (data) {
         CAT_SERVICES = data;
         console.log("Catalog Loaded:", CAT_SERVICES.length, "services");
+        populateCategories();
       }).getServiceCatalogForWeb();
 
       // 2. Dashboard Stats removed
@@ -517,6 +626,7 @@
 
     /* --- NAVIGATION LOGIC --- */
     function switchView(viewName) {
+      console.log('switchView called with:', viewName);
       document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
 
@@ -529,6 +639,7 @@
         navItems[1].classList.add('active');
         if (CHAT_STATE === 'IDLE') startChatSession();
       }
+      if (viewName === 'newservice' && navItems[2]) navItems[2].classList.add('active');
     }
 
     /* --- CHAT CONTROLLER --- */
@@ -640,23 +751,34 @@
             }
 
             let pKey = pName.toLowerCase();
+            let pConfig = (CONFIG_BUFFER.paramConfig && CONFIG_BUFFER.paramConfig[pName]) || {};
+            let minVal = pConfig.min;
 
+            // 1. Generic Validation based on 'min' property (Configured in UI)
+            if (minVal !== undefined && minVal !== null && !isNaN(minVal)) {
+              if (val < minVal) {
+                addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>warning_amber</span> El valor mínimo para <b>${pConfig.label || pName}</b> es <b>${minVal}</b>. Intenta de nuevo.`);
+                return;
+              }
+            }
+
+            // 2. Legacy Hardcoded Validations (Fallbacks if no explicit min set)
             if (pKey.includes('objectives') || pKey.includes('objetivo')) {
-              if (val < 5) {
+              if (val < 5 && !minVal) {
                 addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>warning_amber</span> El mínimo de <b>Objetivos</b> es 5.`);
                 return;
               }
             }
 
             if (pKey.includes('ticket')) {
-              if (val < 50) {
-                addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>warning_amber</span> El volumen mínimo para SOC es <b>50 Tickets</b>.`);
+              if (val < 50 && !minVal) {
+                addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>warning_amber</span> El volumen mínimo sugerido es <b>50 Tickets</b>.`);
                 return;
               }
             }
 
             if (pKey.includes('hour') || pKey.includes('hora')) {
-              if (val < 20) {
+              if (val < 20 && !minVal) {
                 addBotMessage(`<span class='material-icons-round' style='font-size:16px; color:#d32f2f; vertical-align:text-bottom;'>warning_amber</span> El compromiso mínimo es <b>20 Horas</b>.`);
                 return;
               }
@@ -716,40 +838,76 @@
     function startParamConfig() {
       let svc = CONFIG_BUFFER.service;
 
-      // 1. Detect from Metadata (Dynamic)
+      // 1. Detect from Metadata (Dynamic) - NEW FORMAT: configParams.units
       let paramKeys = [];
-      if (svc.configParams && typeof svc.configParams === 'object') {
+      let paramLabels = {};
+      let paramConfig = {}; // Store full config for validation
+
+      let hasDynamicConfig = false;
+
+      if (svc.configParams && svc.configParams.units && Array.isArray(svc.configParams.units)) {
+        // NEW FORMAT: units array
+        hasDynamicConfig = true;
+        svc.configParams.units.forEach(unit => {
+          paramKeys.push(unit.id);
+          paramLabels[unit.id] = unit.label || unit.id;
+          paramConfig[unit.id] = unit; // Store whole unit object
+        });
+      } else if (svc.configParams && typeof svc.configParams === 'object') {
+        // LEGACY FORMAT: direct keys
         paramKeys = Object.keys(svc.configParams);
       }
 
-      // 2. FORCE INJECT & CLEAN CRITICAL PARAMS
-      let sId = svc.id.toUpperCase();
+      // 2. FORCE INJECT & CLEAN CRITICAL PARAMS (legacy fallback ONLY)
+      // Only apply this logic if NO dynamic configuration was found.
+      if (!hasDynamicConfig) {
+        let sId = svc.id.toUpperCase();
 
-      if (sId.includes('SOC')) {
-        if (!paramKeys.includes('tickets')) paramKeys.push('tickets');
-        paramKeys = paramKeys.filter(p => p !== 'ips');
+        if (sId.includes('SOC')) {
+          if (!paramKeys.includes('tickets')) {
+            paramKeys.push('tickets');
+            paramLabels['tickets'] = 'Tickets Mensuales';
+          }
+          paramKeys = paramKeys.filter(p => p !== 'ips');
+        }
+
+        if (sId.includes('PENETRATION') || sId.includes('PENTEST')) {
+          if (!paramKeys.includes('objectives')) {
+            paramKeys.push('objectives');
+            paramLabels['objectives'] = 'Cantidad de Objetivos';
+          }
+          paramKeys = paramKeys.filter(p => p !== 'ips' && p !== 'tickets');
+        }
+
+        if (sId.includes('AUDIT')) {
+          if (!paramKeys.includes('hours')) {
+            paramKeys.push('hours');
+            paramLabels['hours'] = 'Horas de Auditoría';
+          }
+        }
       }
 
-      if (sId.includes('PENETRATION') || sId.includes('PENTEST')) {
-        if (!paramKeys.includes('objectives')) paramKeys.push('objectives');
-        paramKeys = paramKeys.filter(p => p !== 'ips' && p !== 'tickets');
-      }
-
-      if (sId.includes('AUDIT')) {
-        if (!paramKeys.includes('hours')) paramKeys.push('hours');
-      }
+      // Deduplicate keys just in case
+      paramKeys = [...new Set(paramKeys)];
 
       console.log("Final Config Params for:", svc.name, paramKeys);
 
       CONFIG_BUFFER.pendingParams = paramKeys;
+      CONFIG_BUFFER.paramLabels = paramLabels;
+      CONFIG_BUFFER.paramConfig = paramConfig; // Store for validation
       askNextParam();
     }
 
     function askNextParam() {
       if (CONFIG_BUFFER.pendingParams.length > 0) {
         let nextP = CONFIG_BUFFER.pendingParams[0];
+        let label = (CONFIG_BUFFER.paramLabels && CONFIG_BUFFER.paramLabels[nextP]) || nextP;
+
+        let pConfig = (CONFIG_BUFFER.paramConfig && CONFIG_BUFFER.paramConfig[nextP]) || {};
+        let minText = (pConfig.min !== undefined && pConfig.min !== null) ? ` (Mínimo: ${pConfig.min})` : "";
+
         CHAT_STATE = 'ASKING_PARAM_VALUE';
-        addBotMessage(`Ingresa la cantidad para **${nextP}**:`);
+        addBotMessage(`Ingresa la cantidad para **${label}**${minText}:`);
       } else {
         commitService();
       }
@@ -871,6 +1029,279 @@
       } else {
         console.log("Confetti time! (Lib not loaded)");
       }
+    }
+
+    /* --- NEW SERVICE FORM HANDLERS --- */
+    let unitCounter = 0; // Counter for unique unit IDs
+    let tierCounter = 0; // Counter for unique tier IDs
+
+    // --- CATEGORY HANDLING ---
+    function populateCategories() {
+      const select = document.getElementById('svc-category');
+      // Keep first option (-- Seleccionar --)
+      select.length = 1;
+
+      // Extract unique categories
+      const categories = [...new Set(CAT_SERVICES.map(s => s.category).filter(c => c))].sort();
+
+      categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.text = cat;
+        select.appendChild(option);
+      });
+
+      // Add "Nueva Categoría" option
+      const newOption = document.createElement('option');
+      newOption.value = 'NEW_CATEGORY_OPTION';
+      newOption.text = '+ Agregar nueva categoría...';
+      newOption.style.fontWeight = 'bold';
+      newOption.style.color = '#4A148C';
+      select.appendChild(newOption);
+    }
+
+    function handleCategoryChange() {
+      const select = document.getElementById('svc-category');
+      const newContainer = document.getElementById('new-category-container');
+      const newVal = select.value;
+
+      if (newVal === 'NEW_CATEGORY_OPTION') {
+        newContainer.style.display = 'block';
+        document.getElementById('svc-new-category').required = true;
+      } else {
+        newContainer.style.display = 'none';
+        document.getElementById('svc-new-category').required = false;
+      }
+    }
+
+    // --- TIER HANDLING ---
+    function toggleTiersInput() {
+      const hasTiers = document.getElementById('svc-hasTiers').checked;
+      document.getElementById('tiers-container').style.display = hasTiers ? 'block' : 'none';
+    }
+
+    function addTierRow() {
+      tierCounter++;
+      const container = document.getElementById('tiers-list');
+      const row = document.createElement('div');
+      row.id = 'tier-row-' + tierCounter;
+      row.style.cssText = 'display:flex; gap:10px; margin-bottom:10px; align-items:center;';
+      row.innerHTML = `
+        <input type="text" placeholder="Nombre del Tier (ej: Silver)" class="tier-name" 
+          style="flex:1; padding:10px; border:1px solid #ddd; border-radius:6px; font-size:13px;">
+        <button type="button" onclick="removeTierRow(${tierCounter})" 
+          style="padding:8px; background:#dc3545; color:white; border:none; border-radius:6px; cursor:pointer;">
+          <span class="material-icons-round" style="font-size:18px;">delete</span>
+        </button>
+      `;
+      container.appendChild(row);
+    }
+
+    function removeTierRow(id) {
+      const row = document.getElementById('tier-row-' + id);
+      if (row) row.remove();
+    }
+
+    function collectTiers() {
+      const tiers = [];
+      const rows = document.querySelectorAll('#tiers-list > div');
+      rows.forEach(row => {
+        const val = row.querySelector('.tier-name').value.trim();
+        if (val) tiers.push(val);
+      });
+      return tiers.join(',');
+    }
+
+    function addUnitRow() {
+      unitCounter++;
+      const container = document.getElementById('units-list');
+      const row = document.createElement('div');
+      row.id = 'unit-row-' + unitCounter;
+      row.style.cssText = 'display:flex; gap:10px; margin-bottom:10px; align-items:center;';
+      row.innerHTML = `
+        <input type="text" placeholder="ID (ej: objetivos)" class="unit-id" 
+          style="flex:1; padding:10px; border:1px solid #ddd; border-radius:6px; font-size:13px;">
+        <input type="text" placeholder="Label (ej: Cantidad de Objetivos)" class="unit-label" 
+          style="flex:2; padding:10px; border:1px solid #ddd; border-radius:6px; font-size:13px;">
+        <input type="number" placeholder="Min" class="unit-min" 
+          style="width:60px; padding:10px; border:1px solid #ddd; border-radius:6px; font-size:13px;" title="Valor Mínimo (Opcional)">
+        <button type="button" onclick="removeUnitRow(${unitCounter})" 
+          style="padding:8px; background:#dc3545; color:white; border:none; border-radius:6px; cursor:pointer;">
+          <span class="material-icons-round" style="font-size:18px;">delete</span>
+        </button>
+      `;
+      container.appendChild(row);
+    }
+
+    function removeUnitRow(id) {
+      const row = document.getElementById('unit-row-' + id);
+      if (row) row.remove();
+    }
+
+    function collectUnits() {
+      const units = [];
+      const rows = document.querySelectorAll('#units-list > div');
+      rows.forEach(row => {
+        const id = row.querySelector('.unit-id').value.trim().toLowerCase().replace(/\s+/g, '_');
+        const label = row.querySelector('.unit-label').value.trim();
+        const minVal = row.querySelector('.unit-min').value.trim();
+
+        if (id && label) {
+          const unitObj = { id: id, label: label, type: 'number' };
+          if (minVal && !isNaN(minVal)) {
+            unitObj.min = parseInt(minVal, 10);
+          }
+          units.push(unitObj);
+        }
+      });
+      return units;
+    }
+
+    // Store service data temporarily for force create
+    let pendingServiceData = null;
+
+    function submitNewService(event, forceCreate = false) {
+      event && event.preventDefault();
+
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Guardando...';
+
+      // If forcing, use pending data; otherwise collect from form
+      let serviceData;
+      if (forceCreate && pendingServiceData) {
+        serviceData = pendingServiceData;
+      } else {
+        // Collect units of measure
+        const units = collectUnits();
+        const configParams = units.length > 0 ? { units: units } : null;
+
+        // Collect Tiers
+        const tiers = collectTiers();
+
+        // Process Category
+        const catSelect = document.getElementById('svc-category');
+        let category = catSelect.value;
+        if (category === 'NEW_CATEGORY_OPTION') {
+          category = document.getElementById('svc-new-category').value.trim();
+        }
+
+        serviceData = {
+          id: document.getElementById('svc-id').value,
+          name: document.getElementById('svc-name').value,
+          category: category,
+          hasTiers: document.getElementById('svc-hasTiers').checked,
+          tiers: tiers,
+          configParams: configParams
+        };
+        pendingServiceData = serviceData;
+      }
+
+      google.script.run
+        .withSuccessHandler(function (result) {
+          btn.disabled = false;
+          btn.textContent = 'Agregar Servicio';
+
+          if (result.success) {
+            // Build success message with template URLs
+            let msg = result.message;
+            if (result.templates && result.templates.length > 0) {
+              msg += '<br><br><strong>📄 Templates creados:</strong><br>';
+              result.templates.forEach(tpl => {
+                msg += `• <a href="${tpl.url}" target="_blank">${tpl.name}</a><br>`;
+              });
+              if (result.emailSent) {
+                msg += '<br>📧 Se envió notificación por correo.';
+              }
+            }
+            showFormMessageHtml(msg, 'success');
+            resetForm();
+            pendingServiceData = null;
+
+            // Refresh catalog in background
+            google.script.run.withSuccessHandler(function (data) {
+              CAT_SERVICES = data;
+              console.log("Catalog refreshed:", CAT_SERVICES.length, "services");
+              populateCategories(); // Refresh categories
+            }).getServiceCatalogForWeb();
+            triggerConfetti();
+
+          } else if (result.existingTemplates) {
+            // Templates already exist - ask user what to do
+            let msg = '<strong>⚠️ Templates existentes encontrados:</strong><br><br>';
+            result.existing.forEach(tpl => {
+              msg += `• <a href="${tpl.url}" target="_blank">${tpl.name}</a><br>`;
+            });
+            msg += '<br>¿Qué deseas hacer?<br><br>';
+            msg += '<button onclick="useExistingTemplates()" style="padding:8px 15px; background:#28a745; color:white; border:none; border-radius:5px; cursor:pointer; margin-right:10px;">Usar existentes</button>';
+            msg += '<button onclick="forceCreateNewTemplates()" style="padding:8px 15px; background:#dc3545; color:white; border:none; border-radius:5px; cursor:pointer;">Crear nuevos</button>';
+
+            showFormMessageHtml(msg, 'warning');
+          } else {
+            showFormMessage(result.message, 'error');
+          }
+        })
+        .withFailureHandler(function (error) {
+          btn.disabled = false;
+          btn.textContent = 'Agregar Servicio';
+          showFormMessage('Error: ' + error.message, 'error');
+        })
+        .addServiceFromWeb(serviceData, forceCreate);
+    }
+
+    function useExistingTemplates() {
+      // User wants to use existing templates - call with forceCreate=false
+      // But we need to skip the check this time...
+      // Actually just submit normally, the service will be added using existing templates
+      submitNewService(null, false);
+    }
+
+    function forceCreateNewTemplates() {
+      // User wants to create new templates even though some exist
+      submitNewService(null, true);
+    }
+
+    function showFormMessage(message, type) {
+      const msgDiv = document.getElementById('form-message');
+      msgDiv.style.display = 'block';
+      msgDiv.style.background = type === 'success' ? '#d4edda' : '#f8d7da';
+      msgDiv.style.color = type === 'success' ? '#155724' : '#721c24';
+      msgDiv.textContent = message;
+
+      if (type === 'success') {
+        setTimeout(() => { msgDiv.style.display = 'none'; }, 5000);
+      }
+    }
+
+    function showFormMessageHtml(html, type) {
+      const msgDiv = document.getElementById('form-message');
+      msgDiv.style.display = 'block';
+      if (type === 'success') {
+        msgDiv.style.background = '#d4edda';
+        msgDiv.style.color = '#155724';
+      } else if (type === 'warning') {
+        msgDiv.style.background = '#fff3cd';
+        msgDiv.style.color = '#856404';
+      } else {
+        msgDiv.style.background = '#f8d7da';
+        msgDiv.style.color = '#721c24';
+      }
+      msgDiv.innerHTML = html;
+    }
+
+    function resetForm() {
+      document.getElementById('new-service-form').reset();
+
+      // Reset logic for dynamic fields
+      document.getElementById('tiers-container').style.display = 'none';
+      document.getElementById('tiers-list').innerHTML = '';
+      tierCounter = 0;
+
+      document.getElementById('units-list').innerHTML = '';
+      unitCounter = 0;
+
+      // Reset category
+      handleCategoryChange();
     }
 
   </script>

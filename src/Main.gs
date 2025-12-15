@@ -185,7 +185,8 @@ function _processRequest(clientData, serviceSelection, userEmail) {
         clientData: clientData,
         services: enrichedServices,
         pricing: fullPricing,
-        config: CONFIG
+        config: CONFIG,
+        userEmail: userEmail // Pass email for permissions
     };
     
     var docResult;

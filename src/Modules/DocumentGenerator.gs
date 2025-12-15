@@ -133,6 +133,33 @@ var DocumentGenerator = (function() {
         console.warn("Document may still be accessible despite save error.");
     }
     
+    // 6. PERMISSIONS & SHARING
+    try {
+      var file = DriveApp.getFileById(newDocId);
+      
+      // A. Grant access to the user running the app (if valid email)
+      if (context.userEmail && context.userEmail.indexOf('@') > 0 && context.userEmail !== 'anonymous') {
+         try {
+           file.addEditor(context.userEmail);
+           console.log("Acceso de Editor otorgado a: " + context.userEmail);
+         } catch (e) { console.warn("No se pudo agregar editor: " + e.message); }
+      }
+      
+      // B. Ensure Organization can view (if required)
+      // This is a failsafe. "ANYONE_WITH_LINK" is safer for "No se pudo abrir" errors.
+      // But we prefer DOMAIN_WITH_LINK for security.
+      try {
+        file.setSharing(DriveApp.Access.DOMAIN_WITH_LINK, DriveApp.Permission.VIEW);
+        console.log("Sharing set to DOMAIN_WITH_LINK (VIEW).");
+      } catch (e) {
+        // Fallback or ignore if not in a Workspace domain
+        console.warn("Could not set Domain Sharing: " + e.message);
+      }
+      
+    } catch (e) {
+      console.warn("Error gestionando permisos finales: " + e.message);
+    }
+
     console.log("Documento finalizado correctamente.");
     
     return {

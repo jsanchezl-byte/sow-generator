@@ -38,3 +38,18 @@ function processWebRequest(clientData, selectedServices) {
     throw new Error("Error generating SOW: " + e.message);
   }
 }
+
+/**
+ * Adds a new service from the web form.
+ * @param {Object} serviceData - Service data from the form
+ * @param {boolean} forceCreate - Force create new templates even if existing
+ * @returns {Object} Result with success boolean and message
+ */
+function addServiceFromWeb(serviceData, forceCreate) {
+  try {
+    return ServiceCatalogManager.addNewService(serviceData, forceCreate);
+  } catch (e) {
+    return { success: false, message: "Error: " + e.message };
+  }
+}
+

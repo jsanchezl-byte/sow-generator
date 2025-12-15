@@ -1,4 +1,6 @@
-# SOW Generator - Deployment Guide
+# SOW Generator - Deployment Guide (MVP 1.0)
+✅ **Stable Version**: v1.0.0 (2025-12-14)
+
 
 This guide explains how to deploy the Statement of Work (SOW) Generator to your Google Workspace environment.
 
