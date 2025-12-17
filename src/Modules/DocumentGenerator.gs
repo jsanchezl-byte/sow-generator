@@ -359,7 +359,11 @@ var DocumentGenerator = (function() {
               // 1. Title
               console.log("   Creating title paragraph...");
               var titleP = _safeCreateParagraph(body, currentIndex);
-              var titleText = svc.serviceName || svc.serviceId || svc.id || "Servicio Sin Nombre";
+              var titleText = svc.serviceName;
+              if (!titleText) {
+                  // Fallback only if Name is missing
+                  titleText = svc.serviceId || svc.id || "Servicio Sin Nombre";
+              }
               console.log("   Title text: " + titleText);
               titleP.setText(titleText);
               titleP.setHeading(DocumentApp.ParagraphHeading.HEADING2);
