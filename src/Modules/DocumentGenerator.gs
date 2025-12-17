@@ -360,9 +360,12 @@ var DocumentGenerator = (function() {
               console.log("   Creating title paragraph...");
               var titleP = _safeCreateParagraph(body, currentIndex);
               var titleText = svc.serviceName;
+              if (svc.tier) {
+                  titleText += " " + svc.tier;
+              }
               if (!titleText) {
                   // Fallback only if Name is missing
-                  titleText = svc.serviceId || svc.id || "Servicio Sin Nombre";
+                  titleText = (svc.serviceId || svc.id || "Servicio Sin Nombre") + (svc.tier ? " " + svc.tier : "");
               }
               console.log("   Title text: " + titleText);
               titleP.setText(titleText);

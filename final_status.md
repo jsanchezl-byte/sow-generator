@@ -4,13 +4,13 @@
 - [x] **Dynamic Service Form**: Implemented drop-down categories and dynamic tier inputs.
 - [x] **Validation**: Added "Minimum Value" constraints for units.
 - [x] **Bug Fixing**: Resolved duplicate questions in chat and file permission errors.
-- [x] **Deployment**: Deployed version **@193** as "V1.0.6 - Show Service Name Only".
+- [x] **Deployment**: Deployed version **@194** as "V1.0.7 - Clean Service Templates".
 - [x] **Documentation**: Created `USER_GUIDE.md`, `TROUBLESHOOTING.md`, and `CHANGELOG.md`.
 - [x] **Backup**: Full codebase pushed to GitHub `origin/main`.
 
 ## 🚀 Deployment Details
 - **Production URL**: `https://script.google.com/a/macros/kio.tech/s/AKfycbyCBIG6-9JotHV3hrJvIZDrzv_c3AHqefLTNGUcHMCPYKRGOijgknIo_OpN4ylB7uEf/exec`
-- **Version**: 1.0.6 (Build 193)
+- **Version**: 1.0.7 (Build 194)
 - **Status**: Stable
 
 ## 📂 Project Structure
