@@ -159,13 +159,39 @@ function _processRequest(clientData, serviceSelection, userEmail) {
         var unitType = "Servicio";
         var quantity = 1;
         
+        // Dynamic Unit Determination
         if (reqSvc.parameters) {
-            if (reqSvc.parameters.tickets) {
-                unitType = "Ticket";
-                quantity = reqSvc.parameters.tickets;
-            } else if (reqSvc.parameters.objectives) {
-                unitType = "Objetivo";
-                quantity = reqSvc.parameters.objectives;
+            // Priority Map for Spanish Labels
+            var unitMap = {
+                "tickets": "Tickets",
+                "objectives": "Objetivos",
+                "ips": "IPs",
+                "hours": "Horas",
+                "users": "Usuarios",
+                "devices": "Dispositivos",
+                "scans": "Escaneos",
+                "apps": "Aplicaciones"
+            };
+
+            // 1. Try to find a known parameter
+            for (var key in reqSvc.parameters) {
+                if (unitMap[key]) {
+                    unitType = unitMap[key];
+                    quantity = reqSvc.parameters[key];
+                    break;
+                }
+            }
+            
+            // 2. Fallback: If still "Servicio" and we have params, use the first numeric one
+            if (unitType === "Servicio") {
+                for (var key in reqSvc.parameters) {
+                    var val = parseFloat(reqSvc.parameters[key]);
+                    if (!isNaN(val)) {
+                        unitType = key.charAt(0).toUpperCase() + key.slice(1); // Title Case
+                        quantity = val;
+                        break;
+                    }
+                }
             }
         }
         

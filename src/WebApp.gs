@@ -5,6 +5,12 @@
 
 function doGet(e) {
   try {
+    // Check for Force Refresh parameter
+    if (e && e.parameter && e.parameter.refresh === 'true') {
+        ServiceCatalogManager.clearCache();
+        console.log('Cache limpiada vía parámetro URL');
+    }
+
     // Use 'Index' because we moved the file to src/Index.html
     return HtmlService.createTemplateFromFile('Index')
         .evaluate()
