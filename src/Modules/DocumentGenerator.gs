@@ -259,21 +259,22 @@ var DocumentGenerator = (function() {
               
               // Config string formatting
               var configStr = "";
+              var configStr = "";
               if (svc.parameters) {
-                  if (svc.parameters.objectives) {
-                      configStr += svc.parameters.objectives + " Objetivos";
-                  }
-                  if (svc.parameters.tickets) {
-                      if (configStr !== "") configStr += ", ";
-                      configStr += svc.parameters.tickets + " Tickets";
-                  }
-                  
+                  // Helper function for Title Case
+                  var toTitleCase = function(str) {
+                      return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+                  };
+
+                  var parts = [];
                   for (var key in svc.parameters) {
-                      if (key !== 'objectives' && key !== 'tickets') {
-                           if (configStr !== "") configStr += ", ";
-                           configStr += key + ": " + svc.parameters[key];
-                      }
+                       var label = toTitleCase(key);
+                       // Special overrides if needed (though TitleCase usually works fine)
+                       if (key === 'ips') label = 'IPs';
+                       
+                       parts.push(label + ": " + svc.parameters[key]);
                   }
+                  configStr = parts.join(", ");
               }
               if (configStr === "") configStr = "-";
               
