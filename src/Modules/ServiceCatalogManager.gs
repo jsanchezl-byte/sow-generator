@@ -252,13 +252,10 @@ var ServiceCatalogManager = (function() {
         var body = doc.getBody();
         
         // Add placeholder content
-        body.appendParagraph(tplName)
-            .setHeading(DocumentApp.ParagraphHeading.HEADING1);
-        body.appendParagraph("");
-        body.appendParagraph("Descripción del servicio " + serviceName)
-            .setItalic(true);
-        body.appendParagraph("");
-        body.appendParagraph("TODO: Agregar el contenido descriptivo del servicio aquí.");
+        // Clean Template: No H1 title (Generator handles titles). Just instructional text.
+        body.appendParagraph("[Pegar aquí la descripción técnica, alcance y metodología del servicio " + serviceName + "]")
+            .setItalic(true)
+            .setForegroundColor("#666666");
         
         doc.saveAndClose();
         
