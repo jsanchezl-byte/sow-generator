@@ -864,27 +864,57 @@ var DocumentGenerator = (function() {
       // and protect everything before it (Cover, Index, TOC).
       var PROTECTED_INDEX = 20; // Fallback default (safe minimum)
       
+      
       try {
-          // Look for "Resumen de Servicios" (Heading 2) which is usually the first injected section
-          // Or "Servicio" (Table Header)
-          var searchResult = body.findText("Resumen de Servicios");
-          if (!searchResult) searchResult = body.findText("Servicio");
+          // STRATEGY: Find "Resumen de Servicios" but ensure it is the SECTION HEADER and not the TOC entry.
+          // TOC entries are usually hyperlinks or normal text. Section Headers are HEADING2.
           
-          if (searchResult) {
+          var searchResult = body.findText("Resumen de Servicios");
+          var foundValidHeader = false;
+          
+          // Iterate through matches to find the real HEADING2
+          while (searchResult) {
               var element = searchResult.getElement();
-              // Walk up to get the paragraph/table parent
-              var parent = element.getParent();
-              while (parent.getType() !== DocumentApp.ElementType.BODY && parent.getParent()) {
-                   if (parent.getParent().getType() === DocumentApp.ElementType.BODY) break;
-                   parent = parent.getParent();
+              var parent = element.getParent(); // Text -> Paragraph
+              
+              // Walk up if needed (Text -> Paragraph)
+              if (parent.getType() === DocumentApp.ElementType.PARAGRAPH) {
+                  var p = parent.asParagraph();
+                  var heading = p.getHeading();
+                  
+                  // Verification: Is this the Section Header?
+                  if (heading === DocumentApp.ParagraphHeading.HEADING2) {
+                      var foundIndex = body.getChildIndex(p);
+                      if (foundIndex > 0) {
+                          PROTECTED_INDEX = foundIndex; 
+                          console.log("✅ Found Valid Section Header at index: " + foundIndex);
+                          foundValidHeader = true;
+                          break; // Found it! Stop searching.
+                      }
+                  } else {
+                      console.log("⚠️ Ignored TOC/Text match at index: " + body.getChildIndex(p));
+                  }
               }
               
-              var foundIndex = body.getChildIndex(parent);
-              if (foundIndex > 0) {
-                  PROTECTED_INDEX = foundIndex; // Start styling FROM here (inclusive or exclusive?)
-                  // Let's include the header in styling, so protect UP TO foundIndex
-                  console.log("Found Start Marker at index: " + foundIndex);
-              }
+              // Find NEXT occurrence
+              searchResult = body.findText("Resumen de Servicios", searchResult);
+          }
+          
+          // Fallback: If no Heading 2 found, try finding the "Servicio" table header
+          if (!foundValidHeader) {
+               console.log("Header not found. Searching for 'Servicio' table header...");
+               var tableResult = body.findText("Servicio");
+               if (tableResult) {
+                   var tEl = tableResult.getElement();
+                   var tParent = tEl.getParent();
+                   while (tParent.getType() !== DocumentApp.ElementType.BODY && tParent.getParent()) {
+                       tParent = tParent.getParent();
+                   }
+                   if (tParent.getParent().getType() === DocumentApp.ElementType.BODY) {
+                       PROTECTED_INDEX = body.getChildIndex(tParent);
+                       console.log("✅ Found Table Header at index: " + PROTECTED_INDEX);
+                   }
+               }
           }
       } catch (e) {
           console.warn("Dynamic index search failed, using fallback: " + e.message);

@@ -9,8 +9,8 @@
 - [x] **Backup**: Full codebase pushed to GitHub `origin/main`.
 
 ## 🚀 Deployment Details
-- **Production URL**: `https://script.google.com/a/macros/kio.tech/s/AKfycbxdaSIZCEbnzEiJ7DJSPcu-MCK67m8Ie13GJB6qBJOlTYQ_t_3En6254bIbmOf3LYQ/exec`
-- **Version**: 1.0.13 (Build 203)
+- **Production URL**: `https://script.google.com/a/macros/kio.tech/s/AKfycbyNPycxdLab3v5haBgpDmJcltLjU9l4M4iUy6a8pDOg5A7Svs1UYh6bwIg_nlYZMhvI/exec`
+- **Version**: 1.0.14 (Build 204)
 - **Status**: Stable
 
 ## 📂 Project Structure
