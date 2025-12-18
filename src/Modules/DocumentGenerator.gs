@@ -946,7 +946,9 @@ var DocumentGenerator = (function() {
                        textEl.setBold(true);
                   } else if (h === DocumentApp.ParagraphHeading.NORMAL) {
                        textEl.setFontSize(CONFIG.styles.SIZE_NORMAL);
+                       textEl.setFontSize(CONFIG.styles.SIZE_NORMAL);
                        textEl.setForegroundColor(STD_COLOR_TEXT);
+                       textEl.setBold(false); // Explicit Unbold
                   }
                   styledParagraphs++;
               } catch (e) {}
@@ -968,7 +970,9 @@ var DocumentGenerator = (function() {
                    var textEl = el.editAsText();
                    textEl.setFontFamily(STD_FONT);
                    textEl.setFontSize(CONFIG.styles.SIZE_NORMAL);
+                   textEl.setFontSize(CONFIG.styles.SIZE_NORMAL);
                    textEl.setForegroundColor(STD_COLOR_TEXT);
+                   textEl.setBold(false); // Explicit Unbold
                    styledListItems++;
                } catch (e) {}
                el.setLineSpacing(1.15);
@@ -995,6 +999,9 @@ var DocumentGenerator = (function() {
                                       var cellText = cellChild.editAsText();
                                       cellText.setFontFamily(STD_FONT);
                                       cellText.setFontSize(10);
+                                      if (r > 0) { // Skip Header Row
+                                          cellText.setBold(false);
+                                      }
                                   } catch (e) {}
                               }
                           }
@@ -1005,6 +1012,7 @@ var DocumentGenerator = (function() {
                   console.warn("Table styling error: " + e.message);
               }
           }
+      }
       }
       
       console.log("_finalizeDocument: Styled " + styledParagraphs + " paragraphs, " + 
