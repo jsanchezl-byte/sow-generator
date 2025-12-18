@@ -1000,11 +1000,13 @@ var DocumentGenerator = (function() {
                        textEl.setForegroundColor(CONFIG.styles.COLOR_SECONDARY);
                        textEl.setFontSize(CONFIG.styles.SIZE_H3);
                        textEl.setBold(true);
+                       textEl.setBackgroundColor(null);
                   } else if (h === DocumentApp.ParagraphHeading.NORMAL) {
                        textEl.setFontSize(CONFIG.styles.SIZE_NORMAL);
                        textEl.setFontSize(CONFIG.styles.SIZE_NORMAL);
                        textEl.setForegroundColor(STD_COLOR_TEXT);
                        textEl.setBold(false); // Explicit Unbold
+                       textEl.setBackgroundColor(null);
                   }
                   styledParagraphs++;
               } catch (e) {}
@@ -1029,6 +1031,7 @@ var DocumentGenerator = (function() {
                    textEl.setFontSize(CONFIG.styles.SIZE_NORMAL);
                    textEl.setForegroundColor(STD_COLOR_TEXT);
                    textEl.setBold(false); // Explicit Unbold
+                   textEl.setBackgroundColor(null);
                    styledListItems++;
                } catch (e) {}
                el.setLineSpacing(1.15);
@@ -1055,6 +1058,7 @@ var DocumentGenerator = (function() {
                                       var cellText = cellChild.editAsText();
                                       cellText.setFontFamily(STD_FONT);
                                       cellText.setFontSize(CONFIG.styles.SIZE_TABLE_TEXT);
+                                      cellText.setBackgroundColor(null);
                                       if (r > 0) { // Skip Header Row
                                           cellText.setBold(false);
                                       }
