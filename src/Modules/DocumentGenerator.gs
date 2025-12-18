@@ -866,58 +866,59 @@ var DocumentGenerator = (function() {
       
       
       try {
-          // STRATEGY: Find "Resumen de Servicios" but ensure it is the SECTION HEADER and not the TOC entry.
-          // TOC entries are usually hyperlinks or normal text. Section Headers are HEADING2.
+          // STRATEGY 1: PAGE BREAK DETECTION (The Cover Page Shield)
+          // Determine where the FIRST Page Break is. Everything before it is Cover Page -> PROTECTED.
+          
+          var foundPageBreak = false;
+          for (var i = 0; i < Math.min(children, 100); i++) { // Check first 100 elements
+             var child = body.getChild(i);
+             if (child.getType() === DocumentApp.ElementType.PAGE_BREAK) {
+                 // Found end of Page 1!
+                 // Adjust protection to be AT LEAST i + 1 (start of Page 2)
+                 if ((i + 1) > PROTECTED_INDEX) {
+                     PROTECTED_INDEX = i + 1;
+                     console.log("🛡️ Page Break Shield active! Protected Index raised to: " + PROTECTED_INDEX);
+                 }
+                 foundPageBreak = true;
+                 break; // Only need the first one
+             }
+          }
+          
+          // STRATEGY 2: Content Search (For Index/TOC protection on Page 2)
+          // Find "Resumen de Servicios" (Heading 2) 
           
           var searchResult = body.findText("Resumen de Servicios");
           var foundValidHeader = false;
           
-          // Iterate through matches to find the real HEADING2
           while (searchResult) {
               var element = searchResult.getElement();
-              var parent = element.getParent(); // Text -> Paragraph
-              
-              // Walk up if needed (Text -> Paragraph)
+              var parent = element.getParent();
               if (parent.getType() === DocumentApp.ElementType.PARAGRAPH) {
                   var p = parent.asParagraph();
                   var heading = p.getHeading();
                   
-                  // Verification: Is this the Section Header?
                   if (heading === DocumentApp.ParagraphHeading.HEADING2) {
                       var foundIndex = body.getChildIndex(p);
-                      if (foundIndex > 0) {
+                      if (foundIndex > PROTECTED_INDEX) { // Must be after cover page
                           PROTECTED_INDEX = foundIndex; 
                           console.log("✅ Found Valid Section Header at index: " + foundIndex);
                           foundValidHeader = true;
-                          break; // Found it! Stop searching.
+                          break; 
                       }
-                  } else {
-                      console.log("⚠️ Ignored TOC/Text match at index: " + body.getChildIndex(p));
-                  }
+                  } 
               }
-              
-              // Find NEXT occurrence
               searchResult = body.findText("Resumen de Servicios", searchResult);
           }
           
-          // Fallback: If no Heading 2 found, try finding the "Servicio" table header
-          if (!foundValidHeader) {
-               console.log("Header not found. Searching for 'Servicio' table header...");
-               var tableResult = body.findText("Servicio");
-               if (tableResult) {
-                   var tEl = tableResult.getElement();
-                   var tParent = tEl.getParent();
-                   while (tParent.getType() !== DocumentApp.ElementType.BODY && tParent.getParent()) {
-                       tParent = tParent.getParent();
-                   }
-                   if (tParent.getParent().getType() === DocumentApp.ElementType.BODY) {
-                       PROTECTED_INDEX = body.getChildIndex(tParent);
-                       console.log("✅ Found Table Header at index: " + PROTECTED_INDEX);
-                   }
-               }
+          // Check: Is Protected Index dangerously low? (Cover pages are usually 10-15 elements)
+          if (PROTECTED_INDEX < 15) {
+              console.warn("⚠️ Warning: Protected Index very low (" + PROTECTED_INDEX + "). Adjusting to safe minimum of 15.");
+              PROTECTED_INDEX = 15;
           }
+          
       } catch (e) {
-          console.warn("Dynamic index search failed, using fallback: " + e.message);
+          console.warn("Dynamic index search failed, using safe fallback (15): " + e.message);
+          PROTECTED_INDEX = 15;
       }
       
       console.log("Using DYNAMIC protected zone: first " + PROTECTED_INDEX + " elements protected.");
