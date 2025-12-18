@@ -1054,7 +1054,7 @@ var DocumentGenerator = (function() {
                                   try {
                                       var cellText = cellChild.editAsText();
                                       cellText.setFontFamily(STD_FONT);
-                                      cellText.setFontSize(10);
+                                      cellText.setFontSize(CONFIG.styles.SIZE_TABLE_TEXT);
                                       if (r > 0) { // Skip Header Row
                                           cellText.setBold(false);
                                       }
