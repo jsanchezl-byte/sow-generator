@@ -254,8 +254,8 @@ var DocumentGenerator = (function() {
               
               // Use standard appendTableCell(text) but force String type to be safe
               // This prevents potential ghost text issues caused by implicit type coercion failures
-              row.appendTableCell(String(svc.serviceName || svc.serviceId || "Unknown"));
-              row.appendTableCell(String(svc.tier || "N/A"));
+              row.appendTableCell(String(svc.serviceName || svc.serviceId || "Unknown")).setBold(false);
+              row.appendTableCell(String(svc.tier || "N/A")).setBold(false);
               
               // Config string formatting
               var configStr = "";
@@ -278,7 +278,7 @@ var DocumentGenerator = (function() {
               }
               if (configStr === "") configStr = "-";
               
-              row.appendTableCell(String(configStr));
+              row.appendTableCell(String(configStr)).setBold(false);
               
 
           });
@@ -370,7 +370,7 @@ var DocumentGenerator = (function() {
               console.log("   Title text: " + titleText);
               titleP.setText(titleText);
               titleP.setHeading(DocumentApp.ParagraphHeading.HEADING2);
-              titleP.setFontFamily(CONFIG.styles.FONT_FAMILY_HEADING).setFontSize(14).setBold(true).setForegroundColor(CONFIG.styles.COLOR_PRIMARY);
+              titleP.setFontFamily(CONFIG.styles.FONT_FAMILY_HEADING).setFontSize(14).setForegroundColor(CONFIG.styles.COLOR_PRIMARY);
               currentIndex++; 
               console.log("   ✅ Title created at index " + (currentIndex-1));
 
