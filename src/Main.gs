@@ -375,7 +375,7 @@ function runDemoSimulation() {
     // Configuración Solicitada: Pentest Silver, 5 Objetivos
     var serviceSelection = [{
         id: "PENETRATION_TEST", // Correct property expected by _processRequest
-        serviceName: "Pruebas de Penetración", 
+        serviceName: "Servicio Demo (Pentest)", 
         tier: "Silver",
         parameters: {
             objectives: 5
@@ -474,7 +474,7 @@ function runInjectionDiagnostic() {
     
     var testServices = [{
         serviceId: "PENETRATION_TEST",
-        serviceName: "Pruebas de Penetración",
+        serviceName: "Servicio Demo",
         tier: "Silver",
         description: "Fallback description if doc not found"
     }];

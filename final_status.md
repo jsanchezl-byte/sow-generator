@@ -4,13 +4,13 @@
 - [x] **Dynamic Service Form**: Implemented drop-down categories and dynamic tier inputs.
 - [x] **Validation**: Added "Minimum Value" constraints for units.
 - [x] **Bug Fixing**: Resolved duplicate questions in chat and file permission errors.
-- [x] **Deployment**: Deployed version **@196** as "V1.0.9 - UI Rename".
+- [x] **Deployment**: Deployed version **@200** as "Sync Version".
 - [x] **Documentation**: Created `USER_GUIDE.md`, `TROUBLESHOOTING.md`, and `CHANGELOG.md`.
 - [x] **Backup**: Full codebase pushed to GitHub `origin/main`.
 
 ## 🚀 Deployment Details
-- **Production URL**: `https://script.google.com/a/macros/kio.tech/s/AKfycbyCBIG6-9JotHV3hrJvIZDrzv_c3AHqefLTNGUcHMCPYKRGOijgknIo_OpN4ylB7uEf/exec`
-- **Version**: 1.0.9 (Build 196)
+- **Production URL**: `https://script.google.com/a/macros/kio.tech/s/AKfycbyYcKBX0e1QsN9DPjfrYVtfD4sDhFh4we_4bBiqnw0Zhzvce4mw-59f3fnrLwkYqaG9/exec`
+- **Version**: 1.0.10 (Build 200)
 - **Status**: Stable
 
 ## 📂 Project Structure

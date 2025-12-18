@@ -6,7 +6,7 @@
 var ServiceCatalogManager = (function() {
   
   // Cache keys
-  var CACHE_KEY_SERVICES = "SOW_GEN_SERVICES_V4_AUTODISCOVERY"; 
+  var CACHE_KEY_SERVICES = "SOW_GEN_SERVICES_V5_CLEAN"; 
   var CACHE_TTL = 21600; // 6 hours
 
   // Runtime Indexes
