@@ -859,12 +859,38 @@ var DocumentGenerator = (function() {
       var children = body.getNumChildren();
       var pageBreaksFound = 0;
       
-      // FIXED INDEX PROTECTION: The placeholder {{DETALLE_SERVICIOS}} is typically at index ~66
-      // So we protect the first 65 elements (cover + index) and style everything after.
-      // This is more reliable than counting page breaks which can be inconsistent.
-      var PROTECTED_INDEX = 65;
+      // DYNAMIC INDEX PROTECTION:
+      // Search for the start of the injected content (Resumen de Servicios or Detalle)
+      // and protect everything before it (Cover, Index, TOC).
+      var PROTECTED_INDEX = 20; // Fallback default (safe minimum)
       
-      console.log("Using FIXED protected zone: first " + PROTECTED_INDEX + " elements protected (cover/index).");
+      try {
+          // Look for "Resumen de Servicios" (Heading 2) which is usually the first injected section
+          // Or "Servicio" (Table Header)
+          var searchResult = body.findText("Resumen de Servicios");
+          if (!searchResult) searchResult = body.findText("Servicio");
+          
+          if (searchResult) {
+              var element = searchResult.getElement();
+              // Walk up to get the paragraph/table parent
+              var parent = element.getParent();
+              while (parent.getType() !== DocumentApp.ElementType.BODY && parent.getParent()) {
+                   if (parent.getParent().getType() === DocumentApp.ElementType.BODY) break;
+                   parent = parent.getParent();
+              }
+              
+              var foundIndex = body.getChildIndex(parent);
+              if (foundIndex > 0) {
+                  PROTECTED_INDEX = foundIndex; // Start styling FROM here (inclusive or exclusive?)
+                  // Let's include the header in styling, so protect UP TO foundIndex
+                  console.log("Found Start Marker at index: " + foundIndex);
+              }
+          }
+      } catch (e) {
+          console.warn("Dynamic index search failed, using fallback: " + e.message);
+      }
+      
+      console.log("Using DYNAMIC protected zone: first " + PROTECTED_INDEX + " elements protected.");
 
       // A. WHITESPACE CLEANUP - DISABLED (causes removeChild errors)
       // The whitespace cleanup was removing paragraphs which can fail when
@@ -1012,7 +1038,6 @@ var DocumentGenerator = (function() {
                   console.warn("Table styling error: " + e.message);
               }
           }
-      }
       }
       
       console.log("_finalizeDocument: Styled " + styledParagraphs + " paragraphs, " + 
