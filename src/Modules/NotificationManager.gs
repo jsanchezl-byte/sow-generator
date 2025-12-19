@@ -17,7 +17,7 @@ var NotificationManager = (function() {
     
     // HTML Template Construction
 
-    var subject = "SOW Generado: " + data.clientName;
+    var subject = "SOW Generado: " + data.clientName + " | SoP: " + (data.sopNumber || "N/A") + " | Cot: " + (data.quoteNumber || "N/A");
 
     // Generate Services HTML
     var servicesHtml = data.services.map(function(s) {
