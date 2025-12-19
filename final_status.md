@@ -9,9 +9,9 @@
 - [x] **Backup**: Full codebase pushed to GitHub `origin/main`.
 
 ## 🚀 Deployment Details
-- **Production URL**: `https://script.google.com/a/macros/kio.tech/s/AKfycbzEjphTYCTImhycZUn8B1zkqFVcpUfy6oxW_OvLEL_vsg7PEtRfoVmePpxESSc41AIB/exec`
-- **Version**: 1.2.3 (Build 219)
-- **Status**: ✅ STABLE & FUNCTIONAL (All Pricing Params Listed)
+- **Production URL**: `https://script.google.com/a/macros/kio.tech/s/AKfycbx0YTyLysW1liXwGeDhx3nqHwESC-GkkrOR_2krATO63M1Dn-ax88uQLKHdXyiNfxJd/exec`
+- **Version**: 1.2.4 (Build 220)
+- **Status**: ✅ STABLE & FUNCTIONAL (Branded HTML Emails)
 
 ## 📂 Project Structure
 All work is saved in: `/Users/antonio/.gemini/antigravity/scratch/sow_generator`

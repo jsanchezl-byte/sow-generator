@@ -1001,6 +1001,54 @@ var DocumentGenerator = (function() {
           }
       }
       */
+      // B. VISUAL POLISH (Branding Pass)
+      console.log("🎨 Applying Visual Polish (Colors & Fonts)...");
+      var kioPurple = "#5B0F8B";
+      var lightPurple = "#D9D2E9";
+      
+      for (var i = PROTECTED_INDEX; i < children; i++) {
+          var child = body.getChild(i);
+          var type = child.getType();
+          
+          // 1. HEADERS & TEXT
+          if (type === DocumentApp.ElementType.PARAGRAPH) {
+              var p = child.asParagraph();
+              var heading = p.getHeading();
+              var text = p.getText();
+              
+              // Colorize Heading 1
+              if (heading === DocumentApp.ParagraphHeading.HEADING1 && text.trim().length > 0) {
+                  p.setForegroundColor(kioPurple);
+                  p.setFontSize(14); // Standardize H1 size
+              }
+              
+              // Standardize Font for Normal Text (if not skipping)
+              if (heading === DocumentApp.ParagraphHeading.NORMAL && text.trim().length > 0) {
+                  // Only touch if it looks like standard body text (black/gray)
+                  // Avoid messing with stylized highlighted text unless intended
+                  // For now, let's keep it safe and just ensure Helvetica
+                  // p.setFontFamily("Helvetica Neue"); // Optional
+              }
+          }
+          
+          // 2. TABLES
+          if (type === DocumentApp.ElementType.TABLE) {
+              var table = child.asTable();
+              table.setBorderColor(kioPurple); // Purple Borders
+              table.setBorderWidth(1);
+              
+              // Header Row Background
+              if (table.getNumRows() > 0) {
+                  var headerRow = table.getRow(0);
+                  for (var c = 0; c < headerRow.getNumCells(); c++) {
+                      headerRow.getCell(c).setBackgroundColor(lightPurple);
+                      // headerRow.getCell(c).getChild(0).asParagraph().setBold(true); // Ensure Bold
+                  }
+              }
+          }
+      }
+      
+      console.log("✅ Visual Polish Completed.");
       
       // B. STYLE HOMOGENIZATION
       // Now using FIXED INDEX protection instead of counting page breaks
