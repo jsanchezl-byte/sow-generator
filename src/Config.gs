@@ -50,6 +50,8 @@ var CONFIG = {
       "frequency": "Frecuencia",
       "amount": "Cantidad",
       "scan_type": "Tipo de Escaneo",
+      "activos_criticos": "Activos Críticos",
+      "activos_críticos": "Activos Críticos",
       "silver": "Silver",
       "gold": "Gold",
       "platinum": "Platinum",

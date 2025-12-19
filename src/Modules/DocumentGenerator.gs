@@ -261,9 +261,11 @@ var DocumentGenerator = (function() {
               var configStr = "";
               var configStr = "";
               if (svc.parameters) {
-                  // Helper function for Title Case
+                  // Helper function for Title Case (Clean underscores too)
                   var toTitleCase = function(str) {
-                      return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+                      if (!str) return "";
+                      var clean = str.replace(/_/g, " "); // Auto-clean IDs like my_id -> my id
+                      return clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase();
                   };
 
                   var parts = [];
