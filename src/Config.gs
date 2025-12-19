@@ -52,6 +52,8 @@ var CONFIG = {
       "scan_type": "Tipo de Escaneo",
       "activos_criticos": "Activos Críticos",
       "activos_críticos": "Activos Críticos",
+      "procesos_criticos": "Procesos Críticos",
+      "procesos_críticos": "Procesos Críticos",
       "silver": "Silver",
       "gold": "Gold",
       "platinum": "Platinum",

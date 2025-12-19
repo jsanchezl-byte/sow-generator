@@ -9,9 +9,9 @@
 - [x] **Backup**: Full codebase pushed to GitHub `origin/main`.
 
 ## 🚀 Deployment Details
-- **Production URL**: `https://script.google.com/a/macros/kio.tech/s/AKfycby3ws5NsG21o3xiiIQ9L4wE4TtAOAyThsoo0eCZYFLE5CdZAJc97kXMCt0TuAh7SQuO/exec`
-- **Version**: 1.1.1 (Build 213)
-- **Status**: ✅ STABLE & FUNCTIONAL (100% Verified)
+- **Production URL**: `https://script.google.com/a/macros/kio.tech/s/AKfycby8r6U5TVS8Y47Y4WQYId7cZrkC8dxJNBUDd-XViB4MqDcBWj2R_6t4t-TKwh5yHMNf/exec`
+- **Version**: 1.2.0 (Build 215) - GOLD MASTER II
+- **Status**: ✅ STABLE & FUNCTIONAL (Spanish Labels Included)
 
 ## 📂 Project Structure
 All work is saved in: `/Users/antonio/.gemini/antigravity/scratch/sow_generator`

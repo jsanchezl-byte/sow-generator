@@ -777,7 +777,15 @@ var DocumentGenerator = (function() {
           row.appendTableCell(String(displayName + (item.tier ? " - " + item.tier : "")));
           
           // 2. Unidad
-          row.appendTableCell(String(item.unitType || "Servicio"));
+          var unitRaw = String(item.unitType || "Servicio");
+          var unitLabel = CONFIG.LABELS[unitRaw.toLowerCase().trim()];
+          
+          if (!unitLabel) {
+               // Fallback: Clean underscores and Title Case
+               var clean = unitRaw.replace(/_/g, " ");
+               unitLabel = clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase();
+          }
+          row.appendTableCell(unitLabel);
           
           // 3. Cantidad
           row.appendTableCell(String(item.quantity || 1));
