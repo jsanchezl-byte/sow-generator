@@ -154,20 +154,24 @@ var ServiceCatalogManager = (function() {
         var keyUniversal = serviceId + "|" + "" + "|" + pName;
         
         var rule = _pricingIndex[keySpecific] || _pricingIndex[keyUniversal];
+        var unitPrice = 0;
+        var sub = 0;
 
         if (rule) {
-            var sub = (rule.unitPrice * quantity);
+            unitPrice = rule.unitPrice;
+            sub = (unitPrice * quantity);
             total += sub;
             currency = rule.currency; 
-            
-            breakdown.push({
-                concept: paramName, // Original name (e.g. "objectives")
-                unitType: paramName, // Will be translated later
-                quantity: quantity,
-                unitPrice: rule.unitPrice,
-                total: sub
-            });
         }
+
+        // Always add to breakdown, even if no price found (Unit Price will be 0)
+        breakdown.push({
+            concept: paramName, // Original name (e.g. "objectives")
+            unitType: paramName, // Will be translated later
+            quantity: quantity,
+            unitPrice: unitPrice,
+            total: sub
+        });
      }
      
      return {
