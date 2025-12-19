@@ -38,7 +38,21 @@ var CONFIG = {
       SIZE_H1: 16,
       SIZE_H2: 14,
       SIZE_H3: 12,
-      SIZE_NORMAL: 11,
       SIZE_TABLE_TEXT: 10
+  },
+  
+  // Dictionary for ID -> Label translation
+  LABELS: {
+      "objectives": "Objetivos",
+      "ips": "IPs",
+      "users": "Usuarios",
+      "devices": "Dispositivos",
+      "frequency": "Frecuencia",
+      "amount": "Cantidad",
+      "scan_type": "Tipo de Escaneo",
+      "silver": "Silver",
+      "gold": "Gold",
+      "platinum": "Platinum",
+      "black": "Black"
   }
 };

@@ -268,11 +268,16 @@ var DocumentGenerator = (function() {
 
                   var parts = [];
                   for (var key in svc.parameters) {
-                       var label = toTitleCase(key);
-                       // Special overrides if needed (though TitleCase usually works fine)
-                       if (key === 'ips') label = 'IPs';
+                       var cleanKey = key.toLowerCase().trim();
+                       var label = CONFIG.LABELS[cleanKey] || toTitleCase(key);
                        
-                       parts.push(label + ": " + svc.parameters[key]);
+                       // Special case: if value is also a key-like string (e.g. tier), translate it too
+                       var val = svc.parameters[key];
+                       if (typeof val === 'string') {
+                           val = CONFIG.LABELS[val.toLowerCase().trim()] || val;
+                       }
+                       
+                       parts.push(label + ": " + val);
                   }
                   configStr = parts.join(", ");
               }
