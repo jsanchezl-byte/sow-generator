@@ -885,29 +885,67 @@ var DocumentGenerator = (function() {
           }
           
           // STRATEGY 2: Content Search (For Index/TOC protection on Page 2)
-          // Find "Resumen de Servicios" (Heading 2) 
+          // Find the FIRST occurrence of any major section header to establish the safe zone.
           
-          var searchResult = body.findText("Resumen de Servicios");
+          var possibleHeaders = [
+              "Resumen de Servicios", 
+              "Propuesta de servicios", 
+              "Solicitud de servicios", 
+              "Detalle de los servicios",
+              "Propuesta Económica",
+              "Pruebas de Penetración" // Often the service name itself is the header
+          ];
+          
           var foundValidHeader = false;
           
-          while (searchResult) {
-              var element = searchResult.getElement();
-              var parent = element.getParent();
-              if (parent.getType() === DocumentApp.ElementType.PARAGRAPH) {
-                  var p = parent.asParagraph();
-                  var heading = p.getHeading();
-                  
-                  if (heading === DocumentApp.ParagraphHeading.HEADING2) {
-                      var foundIndex = body.getChildIndex(p);
-                      if (foundIndex > PROTECTED_INDEX) { // Must be after cover page
-                          PROTECTED_INDEX = foundIndex; 
-                          console.log("✅ Found Valid Section Header at index: " + foundIndex);
-                          foundValidHeader = true;
-                          break; 
-                      }
-                  } 
+          for (var h = 0; h < possibleHeaders.length; h++) {
+              var term = possibleHeaders[h];
+              var searchResult = body.findText(term);
+              
+              while (searchResult) {
+                  var element = searchResult.getElement();
+                  var parent = element.getParent();
+                  if (parent.getType() === DocumentApp.ElementType.PARAGRAPH) {
+                      var p = parent.asParagraph();
+                      var heading = p.getHeading();
+                      
+                      // We accept HEADING 1, 2 or 3 as a valid section start marker
+                      if (heading === DocumentApp.ParagraphHeading.HEADING1 || 
+                          heading === DocumentApp.ParagraphHeading.HEADING2 ||
+                          heading === DocumentApp.ParagraphHeading.HEADING3) {
+                          
+                          var foundIndex = body.getChildIndex(p);
+                          
+                          // Only update if it makes protection STRONGER (higher index), 
+                          // but logically we want the *first* valid content header to be the limit?
+                          // Actually, we want to protect EVERYTHING BEFORE the *first* injected section.
+                          // So finding the first one is key.
+                          
+                          if (foundIndex > PROTECTED_INDEX) { 
+                              // If we found a valid header later in the doc, that's where content starts.
+                              // But wait, if we find "Solicitud" at 50 and "Propuesta" at 60, content acts start at 50.
+                              // So we want the MINIMUM index that is still > page break?
+                              // Actually, the Page Break Shield gives us the absolute floor.
+                              // If we find a header at 50, we protect up to 50.
+                              
+                              // Optimization: If we haven't found a header yet, or this one is earlier than previous found (but after shield)
+                              // Set/Update foundValidHeader
+                              if (!foundValidHeader) {
+                                  PROTECTED_INDEX = foundIndex;
+                                  foundValidHeader = true; 
+                                  console.log("✅ Found Primary Content Marker (" + term + ") at index: " + foundIndex);
+                              } else {
+                                  // Already found a marker. Is this one earlier?
+                                  if (foundIndex < PROTECTED_INDEX && foundIndex > 15) { // 15 is hard floor
+                                       PROTECTED_INDEX = foundIndex;
+                                       console.log("✅ Found Earlier Content Marker (" + term + ") at index: " + foundIndex);
+                                  }
+                              }
+                          }
+                      } 
+                  }
+                  searchResult = body.findText(term, searchResult);
               }
-              searchResult = body.findText("Resumen de Servicios", searchResult);
           }
           
           // Check: Is Protected Index dangerously low? (Cover pages are usually 10-15 elements)
