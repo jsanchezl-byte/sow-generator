@@ -1182,6 +1182,32 @@ var DocumentGenerator = (function() {
       
       console.log("_finalizeDocument: Styled " + styledParagraphs + " paragraphs, " + 
                   styledListItems + " list items, " + styledTables + " tables");
+
+      // C. REFRESH TABLE OF CONTENTS (Index)
+      // Since we modified headers (H3 -> Normal), we must refresh the TOC.
+      // Apps Script doesn't have .update(), so we Find -> Remove -> Insert New.
+      console.log("🔄 Refreshing Table of Contents...");
+      try {
+          var tocIndex = -1;
+          // Search for existing TOC (usually in first 50 elements)
+          for (var i = 0; i < Math.min(body.getNumChildren(), 50); i++) {
+              if (body.getChild(i).getType() === DocumentApp.ElementType.TABLE_OF_CONTENTS) {
+                  tocIndex = i;
+                  body.getChild(i).removeFromParent();
+                  console.log("✅ Old TOC removed from index: " + tocIndex);
+                  break;
+              }
+          }
+          
+          if (tocIndex !== -1) {
+              var newToc = body.insertTableOfContents(tocIndex);
+              console.log("✅ New TOC inserted at index: " + tocIndex);
+          } else {
+              console.warn("⚠️ No TOC found to refresh.");
+          }
+      } catch (e) {
+          console.error("Failed to refresh TOC: " + e.message);
+      }
   }
 
   /**
