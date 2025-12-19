@@ -57,7 +57,7 @@ var NotificationManager = (function() {
              '<div style="font-size:14px; color:#555; margin-bottom:20px; padding-bottom:15px; border-bottom:1px solid #eee; line-height:1.6;">' +
                  '<strong>Cliente:</strong> ' + data.clientName + '<br>' +
                  '<strong>Correo:</strong> ' + (data.clientEmail || "N/A") + '<br>' +
-                 '<strong>SoP:</strong> ' + (data.sopNumber || "N/A") + ' | <strong>Cotización:</strong> ' + (data.quoteNumber || "N/A") +
+                 '<strong>SoP-</strong>' + (data.sopNumber || "N/A") + ' | <strong>Q-</strong>' + (data.quoteNumber || "N/A") +
              '</div>' +
 
              // SERVICES LIST
