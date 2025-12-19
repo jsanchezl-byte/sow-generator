@@ -155,55 +155,46 @@ function _processRequest(clientData, serviceSelection, userEmail) {
             duration: "Ver Detalles"
         });
         
-        // Determine Unit and Quantity for Pricing Table
-        var unitType = "Servicio";
-        var quantity = 1;
-        
-        // Dynamic Unit Determination
-        if (reqSvc.parameters) {
-            // Priority Map for Spanish Labels
-            var unitMap = {
-                "tickets": "Tickets",
-                "objectives": "Objetivos",
-                "ips": "IPs",
-                "hours": "Horas",
-                "users": "Usuarios",
-                "devices": "Dispositivos",
-                "scans": "Escaneos",
-                "apps": "Aplicaciones"
-            };
+        // 3. Add to Pricing Table (Split by Unit of Measure if available)
+        if (priceInfo.breakdown && priceInfo.breakdown.length > 0) {
+            // Case A: Granular Breakdown (e.g. 5 Objectives, 10 IPs)
+            priceInfo.breakdown.forEach(function(item) {
+                fullPricing.push({
+                    serviceId: reqSvc.id,
+                    serviceName: serviceMap[reqSvc.id] || reqSvc.id,
+                    tier: reqSvc.tier,
+                    unitPrice: item.unitPrice, 
+                    subtotal: item.total,
+                    unitType: item.unitType, // Will be translated by DocumentGenerator
+                    quantity: item.quantity
+                });
+            });
+        } else {
+             // Case B: Simple Service (Flat Fee or No Params)
+             // Determine Quantity
+             var quantity = 1;
+             var unitType = "Servicio";
+             
+             // Try to infer quantity from params if strict breakdown wasn't found
+             if (reqSvc.parameters && Object.keys(reqSvc.parameters).length > 0) {
+                 var firstKey = Object.keys(reqSvc.parameters)[0];
+                 var val = parseFloat(reqSvc.parameters[firstKey]);
+                 if (!isNaN(val)) {
+                     quantity = val;
+                     unitType = firstKey;
+                 }
+             }
 
-            // 1. Try to find a known parameter
-            for (var key in reqSvc.parameters) {
-                if (unitMap[key]) {
-                    unitType = unitMap[key];
-                    quantity = reqSvc.parameters[key];
-                    break;
-                }
-            }
-            
-            // 2. Fallback: If still "Servicio" and we have params, use the first numeric one
-            if (unitType === "Servicio") {
-                for (var key in reqSvc.parameters) {
-                    var val = parseFloat(reqSvc.parameters[key]);
-                    if (!isNaN(val)) {
-                        unitType = key.charAt(0).toUpperCase() + key.slice(1); // Title Case
-                        quantity = val;
-                        break;
-                    }
-                }
-            }
+             fullPricing.push({
+                serviceId: reqSvc.id,
+                serviceName: serviceMap[reqSvc.id] || reqSvc.id,
+                tier: reqSvc.tier,
+                unitPrice: priceInfo.unitPrice,
+                subtotal: priceInfo.subtotal,
+                unitType: unitType,
+                quantity: quantity
+            });
         }
-        
-        fullPricing.push({
-            serviceId: reqSvc.id,
-            serviceName: serviceMap[reqSvc.id] || reqSvc.id,
-            tier: reqSvc.tier,
-            unitPrice: priceInfo.unitPrice,
-            subtotal: priceInfo.subtotal,
-            unitType: unitType,
-            quantity: quantity
-        });
     });
     
     // 3. Document Generation

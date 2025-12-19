@@ -143,6 +143,7 @@ var ServiceCatalogManager = (function() {
      _buildPricingIndex(); 
      var total = 0;
      var currency = "MXN";
+     var breakdown = [];
      
      for (var paramName in userParams) {
         var quantity = parseFloat(userParams[paramName]);
@@ -155,15 +156,25 @@ var ServiceCatalogManager = (function() {
         var rule = _pricingIndex[keySpecific] || _pricingIndex[keyUniversal];
 
         if (rule) {
-            total += (rule.unitPrice * quantity);
+            var sub = (rule.unitPrice * quantity);
+            total += sub;
             currency = rule.currency; 
+            
+            breakdown.push({
+                concept: paramName, // Original name (e.g. "objectives")
+                unitType: paramName, // Will be translated later
+                quantity: quantity,
+                unitPrice: rule.unitPrice,
+                total: sub
+            });
         }
      }
      
      return {
          unitPrice: total,
          subtotal: total,
-         currency: currency
+         currency: currency,
+         breakdown: breakdown // Return detailed components
      };
   }
 
