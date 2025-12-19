@@ -16,60 +16,80 @@ var NotificationManager = (function() {
     var subject = "SOW Listo: " + data.clientName;
     
     // HTML Template Construction
-    var primaryColor = "#5B0F8B"; // KIO Purple
-    var bgColor = "#F4F4F4";
-    var cardColor = "#FFFFFF";
-    
-    var serviceListItems = data.services.map(function(s) { 
-        var quantity = "1"; // Default
-        // Try to find quantity for display
-        if (s.parameters && Object.keys(s.parameters).length > 0) {
-           // Simple heuristic: take first numeric param or just verify params exist
+
+    var subject = "SOW Generado: " + data.clientName;
+
+    // Generate Services HTML
+    var servicesHtml = data.services.map(function(s) {
+        // Build Parameters List (e.g., "objetivos: 10, ips: 5")
+        var paramsList = "";
+        if (s.parameters && typeof s.parameters === 'object') {
+            paramsList = Object.keys(s.parameters).map(function(key) {
+               return key + ": <strong>" + s.parameters[key] + "</strong>";
+            }).join(', ');
         }
-        return '<li style="margin-bottom: 5px;"><strong>' + (s.serviceName || s.serviceId) + '</strong> <span style="color: #666; font-size: 0.9em;">(' + (s.tier || "Standard") + ')</span></li>'; 
+        
+        return  '<div style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:8px; border:1px solid #eee;">' +
+                  '<div style="font-weight:600; font-size:15px; color:#333;">' + s.serviceId + ' <span style="font-weight:400; font-size:13px; color:#5B0F8B;">(' + (s.tier || "Standard") + ')</span></div>' +
+                  '<div style="font-size:13px; color:#666; margin-top:4px;">' + (paramsList || "Configuración estándar") + '</div>' +
+                '</div>';
     }).join("");
-    
+
     var htmlBody = 
-      '<div style="font-family: Helvetica, Arial, sans-serif; background-color: ' + bgColor + '; padding: 40px 20px; margin: 0;">' +
-        '<div style="max-width: 600px; margin: 0 auto; background-color: ' + cardColor + '; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">' +
-            // Header
-            '<div style="background-color: ' + primaryColor + '; padding: 20px; text-align: center;">' +
-                '<h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: bold;">SOW Generator</h1>' +
-            '</div>' +
-            // Body
-            '<div style="padding: 30px;">' +
-                '<h2 style="color: #333333; margin-top: 0;">¡Documento Generado!</h2>' +
-                '<p style="color: #555555; line-height: 1.6;">Hola,</p>' +
-                '<p style="color: #555555; line-height: 1.6;">El Statement of Work para el cliente <strong>' + data.clientName + '</strong> ha sido creado exitosamente.</p>' +
-                
-                // Button
-                '<div style="text-align: center; margin: 30px 0;">' +
-                    '<a href="' + data.sowUrl + '" style="background-color: ' + primaryColor + '; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">Abrir Documento</a>' +
-                '</div>' +
-                
-                // Services List
-                '<div style="background-color: #f9f9f9; padding: 20px; border-radius: 4px; margin-bottom: 20px;">' +
-                    '<h3 style="color: ' + primaryColor + '; margin-top: 0; font-size: 16px;">Servicios Incluidos:</h3>' +
-                    '<ul style="color: #555555; padding-left: 20px; margin-bottom: 0;">' +
-                        serviceListItems +
-                    '</ul>' +
-                '</div>' +
-                
-                '<p style="color: #999999; font-size: 12px; margin-top: 30px; text-align: center;">Generado automáticamente por KIO IT Services SOW System</p>' +
-            '</div>' +
+      '<html><body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">' +
+        '<div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">' +
+          
+          // HEADER
+          '<div style="background: linear-gradient(135deg, #5B0F8B, #8E24AA); padding: 30px; text-align: center; color: white;">' +
+             '<h1 style="margin: 0; font-size: 24px;">SOW Generado</h1>' +
+             '<p style="margin: 10px 0 0; opacity: 0.9;">Statement of Work listo para revisión</p>' +
+          '</div>' +
+
+          // CARD CONTENT
+          '<div style="padding: 30px;">' +
+             
+             // RESUMEN ICON HEADER
+             '<div style="display:flex; align-items:center; margin-bottom:15px;">' +
+                 '<h2 style="color:#5B0F8B; margin:0; font-size:18px;">📄 Resumen de Configuración</h2>' +
+             '</div>' +
+
+             // CLIENT DETAILS
+             '<div style="font-size:14px; color:#555; margin-bottom:20px; padding-bottom:15px; border-bottom:1px solid #eee; line-height:1.6;">' +
+                 '<strong>Cliente:</strong> ' + data.clientName + '<br>' +
+                 '<strong>Correo:</strong> ' + (data.clientEmail || "N/A") + '<br>' +
+                 '<strong>SoP:</strong> ' + (data.sopNumber || "N/A") + ' | <strong>Cotización:</strong> ' + (data.quoteNumber || "N/A") +
+             '</div>' +
+
+             // SERVICES LIST
+             '<div style="margin-bottom: 25px;">' +
+                 servicesHtml +
+             '</div>' +
+
+             // ACTION BUTTON
+             '<div style="text-align: center;">' +
+                '<a href="' + data.sowUrl + '" style="display: inline-block; padding: 14px 28px; background-color: #5B0F8B; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">Abrir Documento</a>' +
+             '</div>' +
+
+          '</div>' +
+
+          // FOOTER
+          '<div style="background-color: #f8f8f8; padding: 15px; text-align: center; font-size: 12px; color: #888; border-top: 1px solid #eee;">' +
+             'Generado por KIO SOW Generator v1.3.3' +
+          '</div>' +
+
         '</div>' +
-      '</div>';
-               
-    try {
-        MailApp.sendEmail({
-            to: userEmail,
-            subject: subject,
-            htmlBody: htmlBody // Use htmlBody for HTML content
-        });
-        console.log("✅ HTML Email sent to: " + userEmail);
-    } catch (e) {
-        console.error("Failed to send email: " + e.message);
-    }
+      '</body></html>';
+
+      try {
+          MailApp.sendEmail({
+              to: userEmail,
+              subject: subject,
+              htmlBody: htmlBody
+          });
+          console.log("Email enviado a: " + userEmail);
+      } catch (e) {
+          console.error("Failed to send email: " + e.message);
+      }
   }
 
   /**

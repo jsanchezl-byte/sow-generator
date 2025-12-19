@@ -232,6 +232,9 @@ function _processRequest(clientData, serviceSelection, userEmail) {
         
         NotificationManager.sendSOWGenerationConfirmation(userEmail, {
             clientName: clientData.clientName,
+            clientEmail: clientData.clientEmail,
+            sopNumber: clientData.sopNumber,
+            quoteNumber: clientData.quoteNumber,
             sowUrl: docResult.url,
             services: enrichedServices
         });
