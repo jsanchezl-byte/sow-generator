@@ -9,9 +9,9 @@
 - [x] **Backup**: Full codebase pushed to GitHub `origin/main`.
 
 ## 🚀 Deployment Details
-- **Production URL**: `https://script.google.com/a/macros/kio.tech/s/AKfycbx-5-cAW89ec4mbkVcFLB-uU3sRMx0oIxX490oKmejEQlGl6HTtpEb9SOCjsz7sti6v/exec`
-- **Version**: 1.2.2 (Build 217)
-- **Status**: ✅ STABLE & FUNCTIONAL (Split Pricing Table)
+- **Production URL**: `https://script.google.com/a/macros/kio.tech/s/AKfycbzEjphTYCTImhycZUn8B1zkqFVcpUfy6oxW_OvLEL_vsg7PEtRfoVmePpxESSc41AIB/exec`
+- **Version**: 1.2.3 (Build 219)
+- **Status**: ✅ STABLE & FUNCTIONAL (All Pricing Params Listed)
 
 ## 📂 Project Structure
 All work is saved in: `/Users/antonio/.gemini/antigravity/scratch/sow_generator`
