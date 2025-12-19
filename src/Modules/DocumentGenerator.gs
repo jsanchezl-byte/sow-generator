@@ -1120,16 +1120,17 @@ var DocumentGenerator = (function() {
               } else if (h === DocumentApp.ParagraphHeading.NORMAL) {
                    el.setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
                    el.setLineSpacing(1.15);
-                   el.setSpacingBefore(0);
                    el.setSpacingAfter(8);
               }
           }
           // Handle List Items
           else if (t === DocumentApp.ElementType.LIST_ITEM) {
                try {
+                   // Force Standard Bullet Glyph
+                   el.setGlyphType(DocumentApp.GlyphType.BULLET);
+                   
                    var textEl = el.editAsText();
                    textEl.setFontFamily(STD_FONT);
-                   textEl.setFontSize(CONFIG.styles.SIZE_NORMAL);
                    textEl.setFontSize(CONFIG.styles.SIZE_NORMAL);
                    textEl.setForegroundColor(STD_COLOR_TEXT);
                    textEl.setBold(false); // Explicit Unbold
@@ -1161,6 +1162,7 @@ var DocumentGenerator = (function() {
                                       cellText.setFontFamily(STD_FONT);
                                       cellText.setFontSize(CONFIG.styles.SIZE_TABLE_TEXT);
                                       cellText.setBackgroundColor(null);
+                                      cellText.setForegroundColor(STD_COLOR_TEXT); // Force Black
                                       if (r > 0) { // Skip Header Row
                                           cellText.setBold(false);
                                       }
