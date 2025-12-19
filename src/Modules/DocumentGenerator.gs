@@ -1098,11 +1098,13 @@ var DocumentGenerator = (function() {
                        textEl.setForegroundColor(STD_COLOR_H);
                        textEl.setFontSize(CONFIG.styles.SIZE_H2);
                        textEl.setBold(true);
-                  } else if (h === DocumentApp.ParagraphHeading.HEADING3) {
-                       textEl.setForegroundColor(CONFIG.styles.COLOR_SECONDARY);
-                       textEl.setFontSize(CONFIG.styles.SIZE_H3);
-                       textEl.setBold(true);
-                       textEl.setBackgroundColor(null);
+                   } else if (h === DocumentApp.ParagraphHeading.HEADING3) {
+                        textEl.setForegroundColor(CONFIG.styles.COLOR_SECONDARY);
+                        textEl.setFontSize(CONFIG.styles.SIZE_H3);
+                        textEl.setBold(true);
+                        textEl.setBackgroundColor(null);
+                        // Convert to Normal so it doesn't appear in TOC (limit TOC to H1/H2)
+                        el.setHeading(DocumentApp.ParagraphHeading.NORMAL);
                   } else if (h === DocumentApp.ParagraphHeading.NORMAL) {
                        textEl.setFontSize(CONFIG.styles.SIZE_NORMAL);
                        textEl.setFontSize(CONFIG.styles.SIZE_NORMAL);
